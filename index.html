@@ -1,1774 +1,3188 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ZeroStorm Story Architect - Interactive Story Builder</title>
-
-<!-- 
-═══════════════════════════════════════════════════════════════════════════
-ZEROSTORM STORY ARCHITECT
-═══════════════════════════════════════════════════════════════════════════
-A collaborative authoring tool for creating rich interactive narratives.
-
-PURPOSE: Make story creation ridiculously easy through:
-- Guided brainstorming prompts
-- AI collaboration suggestions
-- Visual story mapping
-- Instant code generation
-- No coding knowledge required
-
-ZERO-HARM: Tool for creative empowerment, not manipulation.
-All stories respect reader agency and dignity.
-═══════════════════════════════════════════════════════════════════════════
--->
-
-<style>
-:root {
-  --primary: #8b4dff;
-  --primary-light: #a366ff;
-  --secondary: #d4af37;
-  --bg-dark: #1a0f2e;
-  --bg-light: #2d1b4e;
-  --text: #ffffff;
-  --text-muted: #b8a4d4;
-  --success: #00ff88;
-  --warning: #ffa500;
-  --paper: #f4e8d8;
-  --ink: #2c1810;
-}
-
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-body {
-  font-family: 'Segoe UI', system-ui, sans-serif;
-  background: linear-gradient(135deg, var(--bg-dark) 0%, var(--bg-light) 100%);
-  color: var(--text);
-  min-height: 100vh;
-  overflow-x: hidden;
-}
-
-/* Header */
-.header {
-  background: rgba(0, 0, 0, 0.3);
-  backdrop-filter: blur(10px);
-  padding: 20px 40px;
-  border-bottom: 2px solid var(--primary);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  position: sticky;
-  top: 0;
-  z-index: 1000;
-}
-
-.logo {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-}
-
-.logo-icon {
-  font-size: 2.5rem;
-}
-
-.logo-text h1 {
-  font-size: 1.5rem;
-  background: linear-gradient(90deg, var(--primary-light), var(--secondary));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.logo-text p {
-  font-size: 0.85rem;
-  color: var(--text-muted);
-}
-
-.header-actions {
-  display: flex;
-  gap: 15px;
-}
-
-.btn {
-  padding: 12px 24px;
-  border: 2px solid var(--primary);
-  background: rgba(139, 77, 255, 0.2);
-  color: var(--text);
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 1rem;
-  font-weight: 600;
-  transition: all 0.3s;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.btn:hover {
-  background: var(--primary);
-  transform: translateY(-2px);
-  box-shadow: 0 5px 20px rgba(139, 77, 255, 0.4);
-}
-
-.btn-secondary {
-  border-color: var(--secondary);
-  background: rgba(212, 175, 55, 0.2);
-}
-
-.btn-secondary:hover {
-  background: var(--secondary);
-  color: var(--ink);
-}
-
-.btn-success {
-  border-color: var(--success);
-  background: rgba(0, 255, 136, 0.2);
-}
-
-.btn-success:hover {
-  background: var(--success);
-  color: var(--ink);
-}
-
-/* Main Layout */
-.container {
-  max-width: 1600px;
-  margin: 0 auto;
-  padding: 40px 20px;
-}
-
-.wizard-container {
-  display: grid;
-  grid-template-columns: 350px 1fr;
-  gap: 30px;
-  min-height: calc(100vh - 200px);
-}
-
-/* Sidebar Navigation */
-.sidebar {
-  background: rgba(0, 0, 0, 0.3);
-  border-radius: 15px;
-  padding: 30px;
-  border: 2px solid var(--primary);
-  height: fit-content;
-  position: sticky;
-  top: 120px;
-}
-
-.sidebar h2 {
-  margin-bottom: 20px;
-  color: var(--secondary);
-  font-size: 1.3rem;
-}
-
-.step-list {
-  list-style: none;
-}
-
-.step-item {
-  padding: 15px;
-  margin-bottom: 10px;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.3s;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  border: 2px solid transparent;
-}
-
-.step-item:hover {
-  background: rgba(139, 77, 255, 0.1);
-  border-color: var(--primary);
-}
-
-.step-item.active {
-  background: rgba(139, 77, 255, 0.3);
-  border-color: var(--primary-light);
-}
-
-.step-item.completed {
-  background: rgba(0, 255, 136, 0.1);
-  border-color: var(--success);
-}
-
-.step-number {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  background: var(--primary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: bold;
-}
-
-.step-item.completed .step-number {
-  background: var(--success);
-}
-
-.step-label {
-  flex: 1;
-}
-
-/* Main Content Area */
-.content-area {
-  background: rgba(0, 0, 0, 0.3);
-  border-radius: 15px;
-  padding: 40px;
-  border: 2px solid var(--primary);
-  min-height: 600px;
-}
-
-.step-content {
-  display: none;
-}
-
-.step-content.active {
-  display: block;
-  animation: fadeIn 0.4s ease;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.step-title {
-  font-size: 2rem;
-  margin-bottom: 15px;
-  background: linear-gradient(90deg, var(--primary-light), var(--secondary));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.step-subtitle {
-  color: var(--text-muted);
-  font-size: 1.1rem;
-  margin-bottom: 30px;
-  line-height: 1.6;
-}
-
-/* Form Elements */
-.form-group {
-  margin-bottom: 25px;
-}
-
-.form-label {
-  display: block;
-  margin-bottom: 8px;
-  color: var(--secondary);
-  font-weight: 600;
-  font-size: 1.05rem;
-}
-
-.form-input,
-.form-textarea,
-.form-select {
-  width: 100%;
-  padding: 15px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 2px solid rgba(139, 77, 255, 0.3);
-  border-radius: 8px;
-  color: var(--text);
-  font-size: 1rem;
-  transition: all 0.3s;
-  font-family: inherit;
-}
-
-.form-input:focus,
-.form-textarea:focus,
-.form-select:focus {
-  outline: none;
-  border-color: var(--primary);
-  background: rgba(255, 255, 255, 0.08);
-  box-shadow: 0 0 20px rgba(139, 77, 255, 0.2);
-}
-
-.form-textarea {
-  min-height: 150px;
-  resize: vertical;
-  line-height: 1.6;
-}
-
-.form-hint {
-  font-size: 0.9rem;
-  color: var(--text-muted);
-  margin-top: 5px;
-  font-style: italic;
-}
-
-/* AI Suggestions */
-.ai-suggestions {
-  background: linear-gradient(135deg, rgba(139, 77, 255, 0.15), rgba(212, 175, 55, 0.15));
-  border: 2px solid var(--primary);
-  border-radius: 12px;
-  padding: 25px;
-  margin: 25px 0;
-}
-
-.ai-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 20px;
-}
-
-.ai-icon {
-  font-size: 2rem;
-}
-
-.ai-title {
-  font-size: 1.3rem;
-  color: var(--secondary);
-}
-
-.suggestion-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 15px;
-}
-
-.suggestion-card {
-  background: rgba(255, 255, 255, 0.05);
-  border: 2px solid rgba(139, 77, 255, 0.3);
-  border-radius: 8px;
-  padding: 15px;
-  cursor: pointer;
-  transition: all 0.3s;
-}
-
-.suggestion-card:hover {
-  border-color: var(--primary);
-  background: rgba(139, 77, 255, 0.2);
-  transform: translateY(-3px);
-  box-shadow: 0 5px 20px rgba(139, 77, 255, 0.3);
-}
-
-.suggestion-card h4 {
-  color: var(--secondary);
-  margin-bottom: 8px;
-}
-
-.suggestion-card p {
-  font-size: 0.9rem;
-  color: var(--text-muted);
-  line-height: 1.5;
-}
-
-/* Chapter Builder */
-.chapter-builder {
-  display: grid;
-  gap: 20px;
-}
-
-.choice-builder {
-  background: rgba(255, 255, 255, 0.05);
-  border: 2px solid rgba(139, 77, 255, 0.3);
-  border-radius: 12px;
-  padding: 25px;
-  position: relative;
-}
-
-.choice-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
-.choice-number {
-  background: var(--primary);
-  color: white;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: bold;
-  font-size: 1.2rem;
-}
-
-.remove-choice {
-  padding: 8px 16px;
-  background: rgba(255, 0, 0, 0.2);
-  border: 2px solid #ff4444;
-  border-radius: 8px;
-  color: var(--text);
-  cursor: pointer;
-  font-size: 0.9rem;
-  transition: all 0.3s;
-}
-
-.remove-choice:hover {
-  background: #ff4444;
-}
-
-.add-choice-btn {
-  width: 100%;
-  padding: 20px;
-  background: rgba(0, 255, 136, 0.1);
-  border: 2px dashed var(--success);
-  border-radius: 12px;
-  color: var(--success);
-  cursor: pointer;
-  font-size: 1.1rem;
-  font-weight: 600;
-  transition: all 0.3s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-}
-
-.add-choice-btn:hover {
-  background: rgba(0, 255, 136, 0.2);
-  transform: translateY(-3px);
-}
-
-/* Story Map */
-.story-map {
-  background: rgba(0, 0, 0, 0.3);
-  border: 2px solid var(--primary);
-  border-radius: 12px;
-  padding: 30px;
-  min-height: 400px;
-  position: relative;
-  overflow: auto;
-}
-
-.map-node {
-  background: linear-gradient(135deg, rgba(139, 77, 255, 0.3), rgba(212, 175, 55, 0.3));
-  border: 2px solid var(--primary);
-  border-radius: 12px;
-  padding: 20px;
-  margin-bottom: 20px;
-  cursor: pointer;
-  transition: all 0.3s;
-}
-
-.map-node:hover {
-  border-color: var(--secondary);
-  box-shadow: 0 5px 20px rgba(212, 175, 55, 0.4);
-}
-
-.map-node h4 {
-  color: var(--secondary);
-  margin-bottom: 10px;
-  font-size: 1.2rem;
-}
-
-.map-connections {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 15px;
-}
-
-.connection-badge {
-  background: rgba(139, 77, 255, 0.3);
-  border: 2px solid var(--primary);
-  border-radius: 20px;
-  padding: 5px 15px;
-  font-size: 0.85rem;
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-}
-
-/* Preview Panel */
-.preview-panel {
-  background: var(--paper);
-  color: var(--ink);
-  border-radius: 12px;
-  padding: 40px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
-  font-family: Georgia, serif;
-  line-height: 1.8;
-}
-
-.preview-title {
-  font-size: 2rem;
-  color: var(--primary);
-  margin-bottom: 20px;
-  text-align: center;
-}
-
-.preview-text {
-  font-size: 1.1rem;
-  margin-bottom: 30px;
-  text-align: justify;
-}
-
-.preview-choice {
-  background: linear-gradient(135deg, #ffffff, var(--paper));
-  border: 3px solid var(--secondary);
-  border-radius: 10px;
-  padding: 20px;
-  margin-bottom: 15px;
-  cursor: pointer;
-  transition: all 0.3s;
-}
-
-.preview-choice:hover {
-  border-color: var(--primary);
-  transform: translateX(8px);
-  box-shadow: 0 5px 20px rgba(139, 77, 255, 0.3);
-}
-
-/* Code Output */
-.code-output {
-  background: #1e1e1e;
-  border: 2px solid var(--primary);
-  border-radius: 12px;
-  padding: 25px;
-  font-family: 'Courier New', monospace;
-  color: #d4d4d4;
-  overflow-x: auto;
-  position: relative;
-}
-
-.code-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-  padding-bottom: 15px;
-  border-bottom: 1px solid rgba(139, 77, 255, 0.3);
-}
-
-.code-title {
-  color: var(--secondary);
-  font-family: 'Segoe UI', sans-serif;
-}
-
-.copy-code-btn {
-  padding: 8px 16px;
-  background: var(--primary);
-  border: none;
-  border-radius: 6px;
-  color: white;
-  cursor: pointer;
-  font-family: 'Segoe UI', sans-serif;
-  transition: all 0.3s;
-}
-
-.copy-code-btn:hover {
-  background: var(--primary-light);
-}
-
-pre {
-  margin: 0;
-  white-space: pre-wrap;
-  word-wrap: break-word;
-}
-
-.code-keyword { color: #569cd6; }
-.code-string { color: #ce9178; }
-.code-number { color: #b5cea8; }
-.code-comment { color: #6a9955; font-style: italic; }
-.code-property { color: #9cdcfe; }
-
-/* Navigation Footer */
-.step-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 40px;
-  padding-top: 30px;
-  border-top: 2px solid rgba(139, 77, 255, 0.3);
-}
-
-.progress-indicator {
-  color: var(--text-muted);
-  font-size: 0.95rem;
-}
-
-.nav-buttons {
-  display: flex;
-  gap: 15px;
-}
-
-/* Brainstorm Prompts */
-.prompt-cards {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 20px;
-  margin: 30px 0;
-}
-
-.prompt-card {
-  background: linear-gradient(135deg, rgba(139, 77, 255, 0.1), rgba(212, 175, 55, 0.1));
-  border: 2px solid var(--primary);
-  border-radius: 12px;
-  padding: 25px;
-  transition: all 0.3s;
-}
-
-.prompt-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 10px 30px rgba(139, 77, 255, 0.3);
-  border-color: var(--secondary);
-}
-
-.prompt-icon {
-  font-size: 2.5rem;
-  margin-bottom: 15px;
-}
-
-.prompt-title {
-  font-size: 1.3rem;
-  color: var(--secondary);
-  margin-bottom: 10px;
-}
-
-.prompt-question {
-  color: var(--text);
-  font-size: 1rem;
-  line-height: 1.6;
-  margin-bottom: 15px;
-}
-
-.prompt-input {
-  width: 100%;
-  padding: 12px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 2px solid rgba(139, 77, 255, 0.3);
-  border-radius: 8px;
-  color: var(--text);
-  font-size: 0.95rem;
-  transition: all 0.3s;
-}
-
-.prompt-input:focus {
-  outline: none;
-  border-color: var(--primary);
-  background: rgba(255, 255, 255, 0.08);
-}
-
-/* Tooltips */
-.tooltip {
-  position: relative;
-  display: inline-block;
-  cursor: help;
-}
-
-.tooltip-icon {
-  color: var(--secondary);
-  font-size: 1.2rem;
-  margin-left: 5px;
-}
-
-.tooltip-text {
-  visibility: hidden;
-  background-color: rgba(0, 0, 0, 0.95);
-  color: var(--text);
-  text-align: left;
-  border-radius: 8px;
-  padding: 15px;
-  position: absolute;
-  z-index: 1000;
-  bottom: 125%;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 300px;
-  opacity: 0;
-  transition: opacity 0.3s;
-  border: 2px solid var(--primary);
-  font-size: 0.9rem;
-  line-height: 1.5;
-}
-
-.tooltip:hover .tooltip-text {
-  visibility: visible;
-  opacity: 1;
-}
-
-/* Responsive */
-@media (max-width: 1200px) {
-  .wizard-container {
-    grid-template-columns: 1fr;
-  }
-  
-  .sidebar {
-    position: static;
-  }
-}
-
-@media (max-width: 768px) {
-  .header {
-    padding: 15px 20px;
-  }
-  
-  .logo-text h1 {
-    font-size: 1.2rem;
-  }
-  
-  .content-area {
-    padding: 25px;
-  }
-  
-  .suggestion-grid,
-  .prompt-cards {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* Success Animation */
-@keyframes successPulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.05); box-shadow: 0 0 40px var(--success); }
-}
-
-.success-indicator {
-  color: var(--success);
-  animation: successPulse 2s infinite;
-}
-
-/* Loading Spinner */
-.loading {
-  display: inline-block;
-  width: 20px;
-  height: 20px;
-  border: 3px solid rgba(255, 255, 255, 0.3);
-  border-radius: 50%;
-  border-top-color: var(--primary);
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-</style>
+  <meta charset="UTF-8" />
+  <title>Comprehensive Atlas: Disrupting Amphetamine & Methamphetamine Supply Chains</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta
+    name="description"
+    content="A comprehensive, public-interest educational framework for lawful disruption of amphetamine and methamphetamine production, distribution, and demand—grounded in harm reduction, human dignity, and systems thinking."
+  />
+  <style>
+    :root {
+      --bg: #070b12;
+      --bg-alt: #0f172a;
+      --panel: #020617;
+      --accent: #22c55e;
+      --accent-soft: rgba(34, 197, 94, 0.1);
+      --accent-strong: rgba(34, 197, 94, 0.25);
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --border: rgba(148, 163, 184, 0.25);
+      --danger: #f97373;
+      --warn: #facc15;
+      --info: #60a5fa;
+      --radius-lg: 18px;
+      --radius-sm: 9px;
+      --shadow-soft: 0 22px 60px rgba(0, 0, 0, 0.5);
+      --shadow-inset: inset 0 0 0 1px rgba(148, 163, 184, 0.15);
+      --transition: 160ms ease-out;
+      --font-main: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --font-mono: "JetBrains Mono", "SF Mono", ui-monospace, Menlo, Monaco, Consolas, monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      background: radial-gradient(circle at top, #111827 0, #020617 40%, #000 100%);
+      color: var(--text);
+      font-family: var(--font-main);
+      scroll-behavior: smooth;
+    }
+
+    body {
+      min-height: 100vh;
+      line-height: 1.6;
+      position: relative;
+    }
+
+    /* Particle canvas for ambient animation */
+    #particles-canvas {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.4;
+    }
+
+    .noise-overlay {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.25;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 160 160' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='noStitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.25'/%3E%3C/svg%3E");
+      mix-blend-mode: soft-light;
+      z-index: 1;
+    }
+
+    /* Glowing orb accent */
+    .glow-orb {
+      position: fixed;
+      width: 500px;
+      height: 500px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(34, 197, 94, 0.15), transparent 70%);
+      filter: blur(80px);
+      pointer-events: none;
+      z-index: 0;
+      animation: float 20s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translate(20vw, 20vh); }
+      50% { transform: translate(70vw, 60vh); }
+    }
+
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      backdrop-filter: blur(20px) saturate(180%);
+      background: linear-gradient(
+        to bottom,
+        rgba(15, 23, 42, 0.98),
+        rgba(15, 23, 42, 0.9),
+        transparent
+      );
+      border-bottom: 1px solid var(--border);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    }
+
+    .header-inner {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 14px 20px 10px;
+      display: flex;
+      align-items: center;
+      gap: 18px;
+    }
+
+    .logo-badge {
+      width: 44px;
+      height: 44px;
+      border-radius: 999px;
+      background: radial-gradient(circle at 30% 0, #4ade80, #16a34a 40%, #020617);
+      box-shadow: 0 0 0 1px rgba(74, 222, 128, 0.3), 0 16px 48px #16a34a55;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-mono);
+      font-size: 20px;
+      font-weight: 700;
+      color: #e5fdf0;
+      position: relative;
+      animation: pulse-glow 3s ease-in-out infinite;
+    }
+
+    @keyframes pulse-glow {
+      0%, 100% { box-shadow: 0 0 0 1px rgba(74, 222, 128, 0.3), 0 16px 48px #16a34a55; }
+      50% { box-shadow: 0 0 0 1px rgba(74, 222, 128, 0.6), 0 20px 60px #16a34a88; }
+    }
+
+    .header-text {
+      flex: 1;
+    }
+
+    .header-title {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: #f9fafb;
+      text-shadow: 0 2px 12px rgba(34, 197, 94, 0.3);
+    }
+
+    .header-sub {
+      font-size: 13px;
+      color: var(--muted);
+      max-width: 720px;
+      line-height: 1.5;
+    }
+
+    nav {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      font-size: 12px;
+    }
+
+    nav a {
+      padding: 5px 11px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.4);
+      color: var(--muted);
+      text-decoration: none;
+      transition: all var(--transition);
+      background: rgba(15, 23, 42, 0.85);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    nav a::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(120deg, transparent, rgba(34, 197, 94, 0.1), transparent);
+      transform: translateX(-100%);
+      transition: transform 0.5s;
+    }
+
+    nav a:hover::before {
+      transform: translateX(100%);
+    }
+
+    nav a span {
+      font-size: 15px;
+    }
+
+    nav a:hover {
+      border-color: var(--accent);
+      color: #bbf7d0;
+      background: rgba(15, 23, 42, 0.99);
+      box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.3), 0 4px 16px rgba(34, 197, 94, 0.2);
+      transform: translateY(-2px);
+    }
+
+    main {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 24px 20px 60px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: minmax(0, 3fr) minmax(0, 1.2fr);
+      gap: 24px;
+    }
+
+    @media (max-width: 1200px) {
+      .grid {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    .card {
+      background: linear-gradient(135deg, rgba(2, 6, 23, 0.95), rgba(2, 6, 23, 0.85));
+      border-radius: var(--radius-lg);
+      padding: 22px 22px 26px;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-soft), 0 0 0 1px rgba(148, 163, 184, 0.1);
+      position: relative;
+      overflow: hidden;
+      backdrop-filter: blur(10px);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-soft), 0 0 32px rgba(34, 197, 94, 0.15);
+    }
+
+    .card::before {
+      content: "";
+      position: absolute;
+      inset: -60%;
+      background: radial-gradient(circle at 10% 20%, rgba(34, 197, 94, 0.12), transparent 60%);
+      opacity: 0.6;
+      mix-blend-mode: soft-light;
+      pointer-events: none;
+      animation: rotate-glow 30s linear infinite;
+    }
+
+    @keyframes rotate-glow {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      align-items: flex-start;
+      margin-bottom: 12px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .card-title {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      line-height: 1.3;
+      background: linear-gradient(120deg, #f9fafb, #d1d5db);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .tagline {
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .pill {
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.55);
+      color: #e5e7eb;
+      background: rgba(15, 23, 42, 0.95);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      white-space: nowrap;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    }
+
+    .pill.pill-accent {
+      border-color: rgba(34, 197, 94, 0.6);
+      background: linear-gradient(135deg, rgba(22, 101, 52, 0.8), rgba(34, 197, 94, 0.3));
+      color: #bbf7d0;
+      box-shadow: 0 0 16px rgba(34, 197, 94, 0.3);
+    }
+
+    .pill.pill-info {
+      border-color: rgba(96, 165, 250, 0.6);
+      background: linear-gradient(135deg, rgba(29, 78, 216, 0.7), rgba(96, 165, 250, 0.3));
+      color: #dbeafe;
+      box-shadow: 0 0 16px rgba(96, 165, 250, 0.3);
+    }
+
+    .pill.pill-warn {
+      border-color: rgba(251, 191, 36, 0.6);
+      background: linear-gradient(135deg, rgba(180, 83, 9, 0.7), rgba(251, 191, 36, 0.3));
+      color: #fef9c3;
+      box-shadow: 0 0 16px rgba(251, 191, 36, 0.3);
+    }
+
+    h2, h3, h4 {
+      margin-top: 20px;
+      margin-bottom: 10px;
+      letter-spacing: 0.02em;
+      position: relative;
+      z-index: 1;
+    }
+
+    h2 {
+      font-size: 20px;
+      border-bottom: 2px solid rgba(34, 197, 94, 0.3);
+      padding-bottom: 6px;
+      padding-left: 12px;
+      border-left: 3px solid rgba(34, 197, 94, 0.6);
+      margin-left: -12px;
+    }
+
+    h3 {
+      font-size: 17px;
+      color: #d1d5db;
+    }
+
+    h4 {
+      font-size: 14px;
+      text-transform: uppercase;
+      color: var(--muted);
+      letter-spacing: 0.06em;
+    }
+
+    p {
+      margin: 8px 0;
+      font-size: 14px;
+      line-height: 1.7;
+      position: relative;
+      z-index: 1;
+    }
+
+    .muted {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    ul, ol {
+      padding-left: 24px;
+      font-size: 14px;
+      margin: 8px 0 12px;
+      position: relative;
+      z-index: 1;
+    }
+
+    li {
+      line-height: 1.7;
+    }
+
+    li + li {
+      margin-top: 4px;
+    }
+
+    .highlight {
+      border-radius: var(--radius-sm);
+      background: linear-gradient(120deg, rgba(34, 197, 94, 0.15), rgba(15, 23, 42, 0.95));
+      border: 1px solid rgba(34, 197, 94, 0.5);
+      padding: 12px 14px;
+      font-size: 14px;
+      margin: 12px 0;
+      box-shadow: 0 4px 16px rgba(34, 197, 94, 0.1);
+      position: relative;
+      z-index: 1;
+    }
+
+    .highlight::before {
+      content: '✓';
+      position: absolute;
+      left: -8px;
+      top: 10px;
+      width: 24px;
+      height: 24px;
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      color: white;
+      box-shadow: 0 4px 12px rgba(34, 197, 94, 0.4);
+    }
+
+    .info-box {
+      border-radius: var(--radius-sm);
+      background: linear-gradient(120deg, rgba(96, 165, 250, 0.12), rgba(15, 23, 42, 0.95));
+      border: 1px solid rgba(96, 165, 250, 0.4);
+      padding: 12px 14px;
+      font-size: 14px;
+      margin: 12px 0;
+      box-shadow: 0 4px 16px rgba(96, 165, 250, 0.1);
+      position: relative;
+      z-index: 1;
+    }
+
+    .warning {
+      border-radius: var(--radius-sm);
+      background: linear-gradient(120deg, rgba(251, 191, 36, 0.11), rgba(15, 23, 42, 0.96));
+      border: 1px solid rgba(251, 191, 36, 0.5);
+      padding: 12px 14px;
+      font-size: 14px;
+      margin: 12px 0;
+      color: #fef9c3;
+      box-shadow: 0 4px 16px rgba(251, 191, 36, 0.1);
+      position: relative;
+      z-index: 1;
+    }
+
+    .danger {
+      border-radius: var(--radius-sm);
+      background: linear-gradient(135deg, rgba(248, 113, 113, 0.16), rgba(15, 23, 42, 0.96));
+      border: 1px solid rgba(248, 113, 113, 0.6);
+      padding: 12px 14px;
+      font-size: 14px;
+      margin: 12px 0;
+      color: #fee2e2;
+      box-shadow: 0 4px 16px rgba(248, 113, 113, 0.1);
+      position: relative;
+      z-index: 1;
+    }
+
+    .two-col-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px 20px;
+      font-size: 14px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .three-col-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      font-size: 13px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .badge-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 8px 0 4px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .badge {
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      color: #d1d5db;
+      background: rgba(15, 23, 42, 0.9);
+      transition: all 0.2s;
+    }
+
+    .badge:hover {
+      border-color: rgba(148, 163, 184, 0.6);
+      background: rgba(15, 23, 42, 1);
+      transform: translateY(-1px);
+    }
+
+    .badge.badge-green {
+      border-color: rgba(34, 197, 94, 0.6);
+      background: rgba(22, 101, 52, 0.7);
+      color: #bbf7d0;
+    }
+
+    .badge.badge-blue {
+      border-color: rgba(96, 165, 250, 0.6);
+      background: rgba(29, 78, 216, 0.6);
+      color: #dbeafe;
+    }
+
+    .badge.badge-amber {
+      border-color: rgba(251, 191, 36, 0.6);
+      background: rgba(180, 83, 9, 0.6);
+      color: #fef9c3;
+    }
+
+    code {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      background: rgba(15, 23, 42, 0.95);
+      padding: 2px 6px;
+      border-radius: 6px;
+      border: 1px solid rgba(148, 163, 184, 0.35);
+    }
+
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 12px;
+      margin: 16px 0;
+      position: relative;
+      z-index: 1;
+    }
+
+    .stat-card {
+      background: linear-gradient(135deg, rgba(15, 23, 42, 0.8), rgba(2, 6, 23, 0.9));
+      border: 1px solid rgba(148, 163, 184, 0.3);
+      border-radius: var(--radius-sm);
+      padding: 12px;
+      text-align: center;
+    }
+
+    .stat-number {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--accent);
+      line-height: 1;
+    }
+
+    .stat-label {
+      font-size: 11px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-top: 4px;
+    }
+
+    .toc {
+      background: linear-gradient(135deg, rgba(2, 6, 23, 0.95), rgba(2, 6, 23, 0.85));
+      border-radius: var(--radius-lg);
+      padding: 18px 16px;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-soft);
+      position: sticky;
+      top: 100px;
+      max-height: calc(100vh - 140px);
+      overflow: auto;
+      font-size: 13px;
+      backdrop-filter: blur(10px);
+    }
+
+    .toc-title {
+      font-size: 14px;
+      text-transform: uppercase;
+      color: #f9fafb;
+      letter-spacing: 0.1em;
+      margin-bottom: 12px;
+      font-weight: 700;
+      border-bottom: 2px solid rgba(34, 197, 94, 0.3);
+      padding-bottom: 8px;
+    }
+
+    .toc ul {
+      list-style: none;
+      padding-left: 0;
+      margin: 0;
+    }
+
+    .toc li {
+      margin: 6px 0;
+    }
+
+    .toc a {
+      color: var(--muted);
+      text-decoration: none;
+      display: block;
+      padding: 5px 8px;
+      border-radius: 6px;
+      transition: all var(--transition);
+      border-left: 2px solid transparent;
+    }
+
+    .toc a:hover {
+      background: rgba(15, 23, 42, 0.95);
+      color: #f9fafb;
+      border-left-color: var(--accent);
+      padding-left: 12px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .toc-sub {
+      padding-left: 16px;
+      border-left: 1px dashed rgba(148, 163, 184, 0.4);
+      margin-left: 8px;
+      margin-top: 4px;
+    }
+
+    .chip-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
+      margin-bottom: 12px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .chip {
+      font-size: 11px;
+      padding: 4px 9px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.4);
+      color: var(--muted);
+      background: rgba(15, 23, 42, 0.8);
+      transition: all 0.2s;
+    }
+
+    .chip:hover {
+      border-color: var(--accent);
+      color: #bbf7d0;
+      transform: scale(1.05);
+    }
+
+    .process-flow {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      margin: 16px 0;
+      flex-wrap: wrap;
+      position: relative;
+      z-index: 1;
+    }
+
+    .process-step {
+      flex: 1;
+      min-width: 140px;
+      background: linear-gradient(135deg, rgba(15, 23, 42, 0.9), rgba(2, 6, 23, 0.95));
+      border: 1px solid rgba(34, 197, 94, 0.3);
+      border-radius: var(--radius-sm);
+      padding: 12px;
+      text-align: center;
+      position: relative;
+    }
+
+    .process-step::after {
+      content: '→';
+      position: absolute;
+      right: -18px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--accent);
+      font-size: 20px;
+    }
+
+    .process-step:last-child::after {
+      display: none;
+    }
+
+    .process-step-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--accent);
+      margin-bottom: 4px;
+    }
+
+    .process-step-desc {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .expandable {
+      margin: 12px 0;
+      position: relative;
+      z-index: 1;
+    }
+
+    .expandable-header {
+      background: linear-gradient(120deg, rgba(15, 23, 42, 0.8), rgba(2, 6, 23, 0.9));
+      border: 1px solid rgba(148, 163, 184, 0.3);
+      border-radius: var(--radius-sm);
+      padding: 10px 14px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: all 0.2s;
+    }
+
+    .expandable-header:hover {
+      background: linear-gradient(120deg, rgba(15, 23, 42, 0.95), rgba(2, 6, 23, 1));
+      border-color: rgba(34, 197, 94, 0.4);
+    }
+
+    .expandable-title {
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .expandable-icon {
+      font-size: 18px;
+      transition: transform 0.3s;
+    }
+
+    .expandable-content {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.4s ease;
+      padding: 0 14px;
+    }
+
+    .expandable.active .expandable-icon {
+      transform: rotate(180deg);
+    }
+
+    .expandable.active .expandable-content {
+      max-height: 2000px;
+      padding: 14px;
+    }
+
+    footer {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 20px 32px;
+      font-size: 12px;
+      color: var(--muted);
+      text-align: center;
+      position: relative;
+      z-index: 2;
+      border-top: 1px solid rgba(148, 163, 184, 0.2);
+      padding-top: 24px;
+    }
+
+    .footer-pill {
+      display: inline-block;
+      margin-top: 12px;
+      padding: 6px 16px;
+      border-radius: 999px;
+      border: 1px dashed rgba(34, 197, 94, 0.5);
+      background: rgba(22, 101, 52, 0.2);
+      color: #bbf7d0;
+    }
+
+    .zero-harm-notice {
+      margin-top: 16px;
+      padding: 12px 16px;
+      background: linear-gradient(120deg, rgba(34, 197, 94, 0.1), rgba(15, 23, 42, 0.9));
+      border: 1px solid rgba(34, 197, 94, 0.4);
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    /* Scrollbar styling */
+    ::-webkit-scrollbar {
+      width: 10px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: rgba(15, 23, 42, 0.5);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: rgba(34, 197, 94, 0.4);
+      border-radius: 5px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(34, 197, 94, 0.6);
+    }
+
+    @media (max-width: 768px) {
+      .header-inner {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      
+      nav {
+        width: 100%;
+      }
+      
+      .two-col-list,
+      .three-col-list {
+        grid-template-columns: 1fr;
+      }
+      
+      .process-flow {
+        flex-direction: column;
+      }
+      
+      .process-step::after {
+        content: '↓';
+        right: 50%;
+        top: auto;
+        bottom: -18px;
+        transform: translateX(50%);
+      }
+    }
+  </style>
 </head>
 <body>
+  <!-- Particle animation canvas -->
+  <canvas id="particles-canvas"></canvas>
+  
+  <!-- Glowing ambient orb -->
+  <div class="glow-orb"></div>
+  
+  <!-- Noise texture overlay -->
+  <div class="noise-overlay"></div>
 
-<!-- Header -->
-<header class="header">
-  <div class="logo">
-    <div class="logo-icon">✨</div>
-    <div class="logo-text">
-      <h1>ZeroStorm Story Architect</h1>
-      <p>Collaborative Interactive Story Builder</p>
-    </div>
-  </div>
-  <div class="header-actions">
-    <button class="btn btn-secondary" onclick="saveProgress()">
-      💾 Save Progress
-    </button>
-    <button class="btn btn-success" onclick="exportStory()">
-      🚀 Export Story
-    </button>
-  </div>
-</header>
-
-<!-- Main Container -->
-<div class="container">
-  <div class="wizard-container">
-    
-    <!-- Sidebar Navigation -->
-    <aside class="sidebar">
-      <h2>Story Creation Steps</h2>
-      <ul class="step-list">
-        <li class="step-item active" data-step="1" onclick="goToStep(1)">
-          <div class="step-number">1</div>
-          <div class="step-label">Brainstorm</div>
-        </li>
-        <li class="step-item" data-step="2" onclick="goToStep(2)">
-          <div class="step-number">2</div>
-          <div class="step-label">Opening Chapter</div>
-        </li>
-        <li class="step-item" data-step="3" onclick="goToStep(3)">
-          <div class="step-number">3</div>
-          <div class="step-label">Build Choices</div>
-        </li>
-        <li class="step-item" data-step="4" onclick="goToStep(4)">
-          <div class="step-number">4</div>
-          <div class="step-label">Add Branches</div>
-        </li>
-        <li class="step-item" data-step="5" onclick="goToStep(5)">
-          <div class="step-label">Story Map</div>
-        </li>
-        <li class="step-item" data-step="6" onclick="goToStep(6)">
-          <div class="step-number">6</div>
-          <div class="step-label">Preview & Test</div>
-        </li>
-        <li class="step-item" data-step="7" onclick="goToStep(7)">
-          <div class="step-number">7</div>
-          <div class="step-label">Export Code</div>
-        </li>
-      </ul>
-      
-      <div style="margin-top: 30px; padding: 20px; background: rgba(0, 255, 136, 0.1); border: 2px solid var(--success); border-radius: 10px;">
-        <h3 style="color: var(--success); font-size: 1rem; margin-bottom: 10px;">💡 AI Tip</h3>
-        <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.5;">
-          Click any AI suggestion to auto-fill forms. Collaborate with the AI to refine your story!
-        </p>
-      </div>
-    </aside>
-
-    <!-- Main Content Area -->
-    <main class="content-area">
-      
-      <!-- Step 1: Brainstorm -->
-      <div class="step-content active" data-step="1">
-        <h2 class="step-title">🌟 Let's Brainstorm Your Story</h2>
-        <p class="step-subtitle">
-          Answer these questions to shape your interactive narrative. The AI will suggest ideas based on your answers!
-        </p>
-
-        <div class="prompt-cards">
-          <div class="prompt-card">
-            <div class="prompt-icon">🎭</div>
-            <h3 class="prompt-title">Genre & Tone</h3>
-            <p class="prompt-question">What genre and mood are you aiming for?</p>
-            <input type="text" class="prompt-input" id="genre" 
-                   placeholder="e.g., Sci-fi mystery with hopeful tone"
-                   oninput="updateAISuggestions()">
-          </div>
-
-          <div class="prompt-card">
-            <div class="prompt-icon">⚡</div>
-            <h3 class="prompt-title">Core Conflict</h3>
-            <p class="prompt-question">What's the central challenge or mystery?</p>
-            <input type="text" class="prompt-input" id="conflict"
-                   placeholder="e.g., A dimensional rift threatens reality"
-                   oninput="updateAISuggestions()">
-          </div>
-
-          <div class="prompt-card">
-            <div class="prompt-icon">🎯</div>
-            <h3 class="prompt-title">Player Agency</h3>
-            <p class="prompt-question">What meaningful choices will players make?</p>
-            <input type="text" class="prompt-input" id="agency"
-                   placeholder="e.g., Choose between knowledge and power"
-                   oninput="updateAISuggestions()">
-          </div>
-
-          <div class="prompt-card">
-            <div class="prompt-icon">✨</div>
-            <h3 class="prompt-title">Unique Element</h3>
-            <p class="prompt-question">What makes your story special?</p>
-            <input type="text" class="prompt-input" id="unique"
-                   placeholder="e.g., Player's words shape reality"
-                   oninput="updateAISuggestions()">
-          </div>
-
-          <div class="prompt-card">
-            <div class="prompt-icon">🌈</div>
-            <h3 class="prompt-title">Emotional Journey</h3>
-            <p class="prompt-question">How should players feel by the end?</p>
-            <input type="text" class="prompt-input" id="emotion"
-                   placeholder="e.g., Empowered and curious"
-                   oninput="updateAISuggestions()">
-          </div>
-
-          <div class="prompt-card">
-            <div class="prompt-icon">🔮</div>
-            <h3 class="prompt-title">World Details</h3>
-            <p class="prompt-question">Describe your story's setting</p>
-            <input type="text" class="prompt-input" id="world"
-                   placeholder="e.g., Floating islands in a storm"
-                   oninput="updateAISuggestions()">
-          </div>
+  <header>
+    <div class="header-inner">
+      <div class="logo-badge">Δ</div>
+      <div class="header-text">
+        <div class="header-title">Comprehensive Amphetamine Supply Disruption Atlas</div>
+        <div class="header-sub">
+          A systems-level educational framework for lawfully disrupting the production, transport, distribution, and demand of amphetamines and methamphetamine—grounded in harm reduction, evidence-based policy, international cooperation, and human dignity.
         </div>
+      </div>
+      <nav aria-label="Quick navigation">
+        <a href="#overview"><span>⟁</span> Overview</a>
+        <a href="#supply-chain"><span>⛓</span> Supply Chain</a>
+        <a href="#distribution"><span>🕸</span> Distribution</a>
+        <a href="#demand"><span>💊</span> Demand</a>
+        <a href="#international"><span>🌐</span> International</a>
+        <a href="#technology"><span>📊</span> Technology</a>
+        <a href="#implementation"><span>⚙️</span> Implementation</a>
+        <a href="#measurement"><span>📈</span> Measurement</a>
+      </nav>
+    </div>
+  </header>
 
-        <div class="ai-suggestions" id="brainstorm-suggestions">
-          <div class="ai-header">
-            <span class="ai-icon">🤖</span>
-            <h3 class="ai-title">AI Story Suggestions</h3>
+  <main>
+    <div class="grid">
+      <!-- MAIN CONTENT COLUMN -->
+      <section aria-label="Main content">
+        
+        <!-- INTRODUCTION & CONTEXT -->
+        <article class="card" id="overview">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Purpose, Scope & Foundational Principles</div>
+              <p class="tagline">
+                This comprehensive atlas is designed for policymakers, community organizers, public health professionals, researchers, and civil society leaders seeking to understand multi-layered strategies for disrupting synthetic stimulant markets while minimizing harm and maximizing human flourishing.
+              </p>
+            </div>
+            <span class="pill pill-accent">Public Interest</span>
           </div>
-          <p style="color: var(--text-muted); margin-bottom: 20px;">
-            As you fill in the prompts above, the AI will suggest story elements here...
+
+          <div class="danger">
+            <strong>⚠️ Legal & Ethical Foundation</strong><br />
+            This document provides NO instructions for manufacturing, handling, or distributing controlled substances. It outlines conceptual, policy-level disruption strategies that must be implemented within legal frameworks, with full respect for human rights, evidence-based practices, and robust oversight mechanisms. Any practical application requires qualified expertise and adherence to local and international law.
+          </div>
+
+          <h2>🎯 The Challenge: Understanding the Amphetamine Ecosystem</h2>
+          <p>
+            Amphetamine-type stimulants (ATS)—including methamphetamine—represent one of the most globally widespread and damaging categories of illicit drugs. The harm manifests across multiple dimensions:
           </p>
-        </div>
 
-        <div class="step-footer">
-          <div class="progress-indicator">Step 1 of 7</div>
-          <div class="nav-buttons">
-            <button class="btn btn-success" onclick="nextStep()">
-              Next: Opening Chapter →
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Step 2: Opening Chapter -->
-      <div class="step-content" data-step="2">
-        <h2 class="step-title">📖 Craft Your Opening</h2>
-        <p class="step-subtitle">
-          This is where your story begins. Set the scene, introduce the conflict, and hook your readers.
-        </p>
-
-        <div class="form-group">
-          <label class="form-label">
-            Chapter Title
-            <span class="tooltip">
-              <span class="tooltip-icon">ℹ️</span>
-              <span class="tooltip-text">
-                A compelling title that hints at what's to come. Keep it evocative and mysterious!
-              </span>
-            </span>
-          </label>
-          <input type="text" class="form-input" id="chapter-title"
-                 placeholder="e.g., The Awakening">
-        </div>
-
-        <div class="form-group">
-          <label class="form-label">
-            Opening Text
-            <span class="tooltip">
-              <span class="tooltip-icon">ℹ️</span>
-              <span class="tooltip-text">
-                Write 2-4 paragraphs that establish mood, setting, and the initial situation. 
-                Use sensory details and create intrigue!
-              </span>
-            </span>
-          </label>
-          <textarea class="form-textarea" id="chapter-text" rows="10"
-                    placeholder="A rift tears open the sky above, purple lightning cascading through dimensions..."></textarea>
-          <p class="form-hint">💡 Tip: Use vivid imagery and end with a compelling question or dilemma</p>
-        </div>
-
-        <div class="ai-suggestions">
-          <div class="ai-header">
-            <span class="ai-icon">🤖</span>
-            <h3 class="ai-title">AI Writing Prompts for ChatGPT</h3>
-          </div>
-          <div class="suggestion-grid">
-            <div class="suggestion-card" onclick="copyPrompt('opening1')">
-              <h4>🎬 Opening Scene</h4>
-              <p>"Write an opening paragraph for a <span id="genre-ref">story</span> that begins with <span id="conflict-ref">a conflict</span>"</p>
+          <div class="stat-grid">
+            <div class="stat-card">
+              <div class="stat-number">~34M</div>
+              <div class="stat-label">Global ATS Users</div>
             </div>
-            <div class="suggestion-card" onclick="copyPrompt('opening2')">
-              <h4>🌍 World Building</h4>
-              <p>"Describe the setting of <span id="world-ref">this world</span> through sensory details"</p>
+            <div class="stat-card">
+              <div class="stat-number">~92K</div>
+              <div class="stat-label">Annual Deaths</div>
             </div>
-            <div class="suggestion-card" onclick="copyPrompt('opening3')">
-              <h4>🎭 Hook Reader</h4>
-              <p>"Write a mysterious opening that makes readers ask 'what happens next?'"</p>
+            <div class="stat-card">
+              <div class="stat-number">$100B+</div>
+              <div class="stat-label">Global Market Value</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-number">180+</div>
+              <div class="stat-label">Countries Affected</div>
             </div>
           </div>
-        </div>
 
-        <div class="step-footer">
-          <div class="progress-indicator">Step 2 of 7</div>
-          <div class="nav-buttons">
-            <button class="btn" onclick="prevStep()">← Back</button>
-            <button class="btn btn-success" onclick="nextStep()">Next: Add Choices →</button>
-          </div>
-        </div>
-      </div>
+          <p class="muted">
+            <em>Note: Statistics are approximate estimates based on UNODC reports and academic research. Actual numbers vary by region and methodology.</em>
+          </p>
 
-      <!-- Step 3: Build Choices -->
-      <div class="step-content" data-step="3">
-        <h2 class="step-title">🔀 Create Player Choices</h2>
-        <p class="step-subtitle">
-          Give players meaningful decisions. Each choice should feel distinct and lead somewhere interesting.
-        </p>
-
-        <div id="choices-container" class="chapter-builder">
-          <!-- Choices will be added dynamically -->
-        </div>
-
-        <button class="add-choice-btn" onclick="addChoice()">
-          <span>➕</span>
-          <span>Add Another Choice</span>
-        </button>
-
-        <div class="ai-suggestions">
-          <div class="ai-header">
-            <span class="ai-icon">🤖</span>
-            <h3 class="ai-title">AI Choice Design Tips</h3>
-          </div>
-          <div class="suggestion-grid">
-            <div class="suggestion-card">
-              <h4>🎯 Meaningful Impact</h4>
-              <p>Each choice should have clear consequences. Avoid "correct" answers - make all paths valid</p>
+          <div class="three-col-list">
+            <div>
+              <h4>🧠 Individual Harms</h4>
+              <ul>
+                <li>Severe neurotoxicity and cognitive impairment</li>
+                <li>Cardiovascular damage and stroke risk</li>
+                <li>Psychosis, paranoia, and mental health crises</li>
+                <li>Dental deterioration ("meth mouth")</li>
+                <li>Severe malnutrition and physical decline</li>
+                <li>High risk of addiction and overdose</li>
+              </ul>
             </div>
-            <div class="suggestion-card">
-              <h4>⚖️ Balance Costs</h4>
-              <p>Mix free choices with ones requiring resources. Higher costs = greater rewards</p>
+            <div>
+              <h4>👨‍👩‍👧‍👦 Social Harms</h4>
+              <ul>
+                <li>Family breakdown and child neglect</li>
+                <li>Domestic violence and interpersonal trauma</li>
+                <li>Intergenerational cycles of addiction</li>
+                <li>Loss of employment and housing</li>
+                <li>Social isolation and stigmatization</li>
+                <li>Community fragmentation</li>
+              </ul>
             </div>
-            <div class="suggestion-card">
-              <h4>🎭 Distinct Voices</h4>
-              <p>Give choices different tones: bold, cautious, creative, analytical</p>
-            </div>
-            <div class="suggestion-card">
-              <h4>🔮 Hint Outcomes</h4>
-              <p>Descriptions should telegraph (but not spoil) what each path offers</p>
+            <div>
+              <h4>🏘️ Community Harms</h4>
+              <ul>
+                <li>Increased violent crime and property crime</li>
+                <li>Strain on healthcare and emergency systems</li>
+                <li>Environmental contamination from labs</li>
+                <li>Economic decline in affected areas</li>
+                <li>Erosion of social trust and cohesion</li>
+                <li>Burden on criminal justice systems</li>
+              </ul>
             </div>
           </div>
-        </div>
 
-        <div class="step-footer">
-          <div class="progress-indicator">Step 3 of 7</div>
-          <div class="nav-buttons">
-            <button class="btn" onclick="prevStep()">← Back</button>
-            <button class="btn btn-success" onclick="nextStep()">Next: Add Branches →</button>
-          </div>
-        </div>
-      </div>
+          <h2>🔄 Systems-Thinking Approach</h2>
+          <p>
+            Traditional "war on drugs" approaches have largely failed because they treat symptoms rather than systems. Effective disruption requires understanding the amphetamine trade as an interconnected ecosystem with multiple pressure points and feedback loops.
+          </p>
 
-      <!-- Step 4: Add Branch Chapters -->
-      <div class="step-content" data-step="4">
-        <h2 class="step-title">🌳 Expand Your Story Branches</h2>
-        <p class="step-subtitle">
-          For each choice you created, add a follow-up chapter. You can keep branching to create a rich narrative tree!
-        </p>
-
-        <div id="branches-container">
-          <!-- Branch chapters will be populated based on choices -->
-        </div>
-
-        <div class="ai-suggestions">
-          <div class="ai-header">
-            <span class="ai-icon">🤖</span>
-            <h3 class="ai-title">Branching Narrative Strategies</h3>
-          </div>
-          <div class="suggestion-grid">
-            <div class="suggestion-card">
-              <h4>🔄 Convergence</h4>
-              <p>Multiple paths can lead to the same outcome - vary the journey, not just destination</p>
+          <div class="process-flow">
+            <div class="process-step">
+              <div class="process-step-title">Precursors</div>
+              <div class="process-step-desc">Chemical inputs & equipment</div>
             </div>
-            <div class="suggestion-card">
-              <h4>📊 Depth vs Breadth</h4>
-              <p>3-5 choices with 3 layers deep > 10 choices with 1 layer. Quality over quantity</p>
+            <div class="process-step">
+              <div class="process-step-title">Production</div>
+              <div class="process-step-desc">Synthesis & processing nodes</div>
             </div>
-            <div class="suggestion-card">
-              <h4>💎 Secret Paths</h4>
-              <p>Hide special choices behind requirements (items, skills) to reward exploration</p>
+            <div class="process-step">
+              <div class="process-step-title">Transport</div>
+              <div class="process-step-desc">Logistics & smuggling</div>
             </div>
-            <div class="suggestion-card">
-              <h4>🎪 Variety</h4>
-              <p>Mix action, dialogue, exploration, and reflection across branches</p>
+            <div class="process-step">
+              <div class="process-step-title">Distribution</div>
+              <div class="process-step-desc">Wholesale & retail networks</div>
+            </div>
+            <div class="process-step">
+              <div class="process-step-title">Demand</div>
+              <div class="process-step-desc">End-users & social drivers</div>
             </div>
           </div>
-        </div>
 
-        <div class="step-footer">
-          <div class="progress-indicator">Step 4 of 7</div>
-          <div class="nav-buttons">
-            <button class="btn" onclick="prevStep()">← Back</button>
-            <button class="btn btn-success" onclick="nextStep()">Next: View Story Map →</button>
+          <div class="highlight">
+            <strong>🎯 Core Thesis:</strong> Sustainable market disruption emerges from applying simultaneous, coordinated pressure across ALL stages of the supply chain while simultaneously expanding treatment, recovery, and alternative opportunities. Single-point interventions merely displace problems; systems-level interventions create cascading reductions in market viability.
           </div>
-        </div>
-      </div>
 
-      <!-- Step 5: Story Map -->
-      <div class="step-content" data-step="5">
-        <h2 class="step-title">🗺️ Your Story Map</h2>
-        <p class="step-subtitle">
-          Visualize how all your chapters connect. Click any node to edit it.
-        </p>
+          <h3>⚖️ Balanced Intervention Philosophy</h3>
+          <p>
+            The most effective strategies balance four fundamental pillars:
+          </p>
 
-        <div class="story-map" id="story-map">
-          <!-- Story map will be generated dynamically -->
-        </div>
-
-        <div class="step-footer">
-          <div class="progress-indicator">Step 5 of 7</div>
-          <div class="nav-buttons">
-            <button class="btn" onclick="prevStep()">← Back</button>
-            <button class="btn btn-success" onclick="nextStep()">Next: Preview Story →</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Step 6: Preview -->
-      <div class="step-content" data-step="6">
-        <h2 class="step-title">👁️ Preview Your Story</h2>
-        <p class="step-subtitle">
-          See how your story will look to readers. Test the flow and make adjustments.
-        </p>
-
-        <div class="preview-panel" id="preview-panel">
-          <!-- Live preview will be rendered here -->
-        </div>
-
-        <div class="step-footer">
-          <div class="progress-indicator">Step 6 of 7</div>
-          <div class="nav-buttons">
-            <button class="btn" onclick="prevStep()">← Back</button>
-            <button class="btn btn-success" onclick="nextStep()">Next: Export Code →</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Step 7: Export -->
-      <div class="step-content" data-step="7">
-        <h2 class="step-title">🚀 Export Your Story</h2>
-        <p class="step-subtitle">
-          Your interactive story is ready! Copy the code below and paste it into the ZeroStorm framework.
-        </p>
-
-        <div class="code-output">
-          <div class="code-header">
-            <h3 class="code-title">Generated Chapter Code</h3>
-            <button class="copy-code-btn" onclick="copyCode()">📋 Copy All</button>
-          </div>
-          <pre id="generated-code"></pre>
-        </div>
-
-        <div style="margin-top: 30px;">
-          <h3 style="color: var(--secondary); margin-bottom: 15px;">📚 Next Steps</h3>
-          <ol style="line-height: 2; color: var(--text-muted);">
-            <li>Copy the generated code above</li>
-            <li>Open your ZeroStorm storybook HTML file</li>
-            <li>Find the <code style="background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px;">chapters</code> object in JavaScript SECTION 3</li>
-            <li>Paste your new chapters into the chapters object</li>
-            <li>Save and open in your browser to test!</li>
-          </ol>
-        </div>
-
-        <div class="ai-suggestions">
-          <div class="ai-header">
-            <span class="ai-icon">🤖</span>
-            <h3 class="ai-title">Ready for More?</h3>
-          </div>
-          <div class="suggestion-grid">
-            <div class="suggestion-card">
-              <h4>🎨 Add Items</h4>
-              <p>Create collectible items that unlock special story paths</p>
+          <div class="two-col-list">
+            <div>
+              <h4>🛡️ Supply Reduction</h4>
+              <ul>
+                <li>Precursor chemical controls</li>
+                <li>Lab detection and dismantling</li>
+                <li>Trafficking interdiction</li>
+                <li>Financial disruption</li>
+              </ul>
             </div>
-            <div class="suggestion-card">
-              <h4>🔧 Craft Recipes</h4>
-              <p>Let players combine items to create powerful artifacts</p>
+            <div>
+              <h4>❤️ Demand Reduction</h4>
+              <ul>
+                <li>Prevention and education</li>
+                <li>Treatment accessibility</li>
+                <li>Recovery support systems</li>
+                <li>Economic alternatives</li>
+              </ul>
             </div>
-            <div class="suggestion-card">
-              <h4>🌟 Secret Choices</h4>
-              <p>Hide special options behind skill requirements</p>
+            <div>
+              <h4>🏥 Harm Reduction</h4>
+              <ul>
+                <li>Overdose prevention</li>
+                <li>Health services access</li>
+                <li>Stigma reduction</li>
+                <li>Safe consumption environments</li>
+              </ul>
             </div>
-            <div class="suggestion-card">
-              <h4>🗳️ Add Voting</h4>
-              <p>Let players vote on major story directions with Fate Tokens</p>
+            <div>
+              <h4>🤝 Community Resilience</h4>
+              <ul>
+                <li>Social cohesion building</li>
+                <li>Economic development</li>
+                <li>Trauma-informed supports</li>
+                <li>Youth empowerment programs</li>
+              </ul>
             </div>
           </div>
-        </div>
 
-        <div class="step-footer">
-          <div class="progress-indicator">Step 7 of 7 - Complete! 🎉</div>
-          <div class="nav-buttons">
-            <button class="btn" onclick="prevStep()">← Back</button>
-            <button class="btn btn-success" onclick="downloadStory()">💾 Download HTML</button>
+          <div class="warning">
+            <strong>⚠️ Critical Balance Principle:</strong> Over-reliance on enforcement without addressing underlying social determinants, trauma, and economic exclusion will backfire—creating more violent markets, deeper community trauma, and systemic distrust. Conversely, addressing demand without disrupting highly profitable supply chains allows exploitation to continue unchecked. <strong>Both sides are essential and must be coordinated.</strong>
           </div>
-        </div>
-      </div>
+        </article>
 
-    </main>
-  </div>
-</div>
-
-<script>
-// ═══════════════════════════════════════════════════════════════════════
-// STATE MANAGEMENT
-// ═══════════════════════════════════════════════════════════════════════
-
-let currentStep = 1;
-let storyData = {
-  brainstorm: {
-    genre: '',
-    conflict: '',
-    agency: '',
-    unique: '',
-    emotion: '',
-    world: ''
-  },
-  chapters: {
-    start: {
-      title: '',
-      text: '',
-      choices: []
-    }
-  }
-};
-
-// Initialize first choice
-function initializeChoices() {
-  addChoice();
-  addChoice();
-  addChoice();
-}
-
-// ═══════════════════════════════════════════════════════════════════════
-// NAVIGATION
-// ═══════════════════════════════════════════════════════════════════════
-
-function goToStep(step) {
-  // Save current step data
-  saveStepData();
-  
-  // Update UI
-  currentStep = step;
-  
-  // Hide all steps
-  document.querySelectorAll('.step-content').forEach(el => {
-    el.classList.remove('active');
-  });
-  
-  // Show target step
-  document.querySelector(`.step-content[data-step="${step}"]`).classList.add('active');
-  
-  // Update sidebar
-  document.querySelectorAll('.step-item').forEach(el => {
-    const stepNum = parseInt(el.dataset.step);
-    el.classList.remove('active', 'completed');
-    
-    if (stepNum === step) {
-      el.classList.add('active');
-    } else if (stepNum < step) {
-      el.classList.add('completed');
-    }
-  });
-  
-  // Load step-specific data
-  loadStepData();
-  
-  // Scroll to top
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-function nextStep() {
-  if (currentStep < 7) {
-    goToStep(currentStep + 1);
-  }
-}
-
-function prevStep() {
-  if (currentStep > 1) {
-    goToStep(currentStep - 1);
-  }
-}
-
-// ═══════════════════════════════════════════════════════════════════════
-// STEP DATA MANAGEMENT
-// ═══════════════════════════════════════════════════════════════════════
-
-function saveStepData() {
-  switch(currentStep) {
-    case 1: // Brainstorm
-      storyData.brainstorm.genre = document.getElementById('genre')?.value || '';
-      storyData.brainstorm.conflict = document.getElementById('conflict')?.value || '';
-      storyData.brainstorm.agency = document.getElementById('agency')?.value || '';
-      storyData.brainstorm.unique = document.getElementById('unique')?.value || '';
-      storyData.brainstorm.emotion = document.getElementById('emotion')?.value || '';
-      storyData.brainstorm.world = document.getElementById('world')?.value || '';
-      break;
-      
-    case 2: // Opening Chapter
-      storyData.chapters.start.title = document.getElementById('chapter-title')?.value || '';
-      storyData.chapters.start.text = document.getElementById('chapter-text')?.value || '';
-      break;
-      
-    case 3: // Choices
-      saveChoices();
-      break;
-  }
-  
-  // Save to localStorage
-  localStorage.setItem('zerostorm_story', JSON.stringify(storyData));
-}
-
-function loadStepData() {
-  // Try to load from localStorage
-  const saved = localStorage.getItem('zerostorm_story');
-  if (saved) {
-    storyData = JSON.parse(saved);
-  }
-  
-  switch(currentStep) {
-    case 1: // Brainstorm
-      document.getElementById('genre').value = storyData.brainstorm.genre;
-      document.getElementById('conflict').value = storyData.brainstorm.conflict;
-      document.getElementById('agency').value = storyData.brainstorm.agency;
-      document.getElementById('unique').value = storyData.brainstorm.unique;
-      document.getElementById('emotion').value = storyData.brainstorm.emotion;
-      document.getElementById('world').value = storyData.brainstorm.world;
-      updateAISuggestions();
-      break;
-      
-    case 2: // Opening Chapter
-      document.getElementById('chapter-title').value = storyData.chapters.start.title;
-      document.getElementById('chapter-text').value = storyData.chapters.start.text;
-      updateReferences();
-      break;
-      
-    case 3: // Choices
-      renderChoices();
-      break;
-      
-    case 5: // Story Map
-      renderStoryMap();
-      break;
-      
-    case 6: // Preview
-      renderPreview();
-      break;
-      
-    case 7: // Export
-      generateCode();
-      break;
-  }
-}
-
-// ═══════════════════════════════════════════════════════════════════════
-// BRAINSTORM SUGGESTIONS
-// ═══════════════════════════════════════════════════════════════════════
-
-function updateAISuggestions() {
-  const genre = document.getElementById('genre').value;
-  const conflict = document.getElementById('conflict').value;
-  const unique = document.getElementById('unique').value;
-  
-  const container = document.getElementById('brainstorm-suggestions');
-  
-  if (!genre && !conflict && !unique) {
-    container.innerHTML = `
-      <div class="ai-header">
-        <span class="ai-icon">🤖</span>
-        <h3 class="ai-title">AI Story Suggestions</h3>
-      </div>
-      <p style="color: var(--text-muted); margin-bottom: 20px;">
-        As you fill in the prompts above, the AI will suggest story elements here...
-      </p>
-    `;
-    return;
-  }
-  
-  let suggestions = `
-    <div class="ai-header">
-      <span class="ai-icon">🤖</span>
-      <h3 class="ai-title">AI Story Suggestions</h3>
-    </div>
-    <p style="color: var(--text-muted); margin-bottom: 20px;">
-      Based on your inputs, here are some narrative elements to consider:
-    </p>
-    <div class="suggestion-grid">
-  `;
-  
-  if (genre) {
-    suggestions += `
-      <div class="suggestion-card">
-        <h4>🎬 Opening Hook</h4>
-        <p>Start with a visceral moment that showcases your ${genre} setting. Drop readers into action immediately.</p>
-      </div>
-    `;
-  }
-  
-  if (conflict) {
-    suggestions += `
-      <div class="suggestion-card">
-        <h4>⚡ Escalation</h4>
-        <p>The conflict (${conflict}) should become more urgent with each choice. Start small, build to climax.</p>
-      </div>
-    `;
-  }
-  
-  if (unique) {
-    suggestions += `
-      <div class="suggestion-card">
-        <h4>✨ Unique Mechanic</h4>
-        <p>Your unique element (${unique}) could unlock special choices or reveal hidden story paths.</p>
-      </div>
-    `;
-  }
-  
-  suggestions += `
-    <div class="suggestion-card">
-      <h4>🔮 ChatGPT Prompt</h4>
-      <p>"Generate 5 opening lines for a ${genre || 'story'} where ${conflict || 'the protagonist faces a challenge'}"</p>
-    </div>
-  </div>
-  `;
-  
-  container.innerHTML = suggestions;
-  
-  // Update references in other steps
-  updateReferences();
-}
-
-function updateReferences() {
-  const genre = document.getElementById('genre')?.value || 'story';
-  const conflict = document.getElementById('conflict')?.value || 'a conflict';
-  const world = document.getElementById('world')?.value || 'this world';
-  
-  const genreRefs = document.querySelectorAll('#genre-ref');
-  genreRefs.forEach(el => el.textContent = genre);
-  
-  const conflictRefs = document.querySelectorAll('#conflict-ref');
-  conflictRefs.forEach(el => el.textContent = conflict);
-  
-  const worldRefs = document.querySelectorAll('#world-ref');
-  worldRefs.forEach(el => el.textContent = world);
-}
-
-// ═══════════════════════════════════════════════════════════════════════
-// CHOICE BUILDER
-// ═══════════════════════════════════════════════════════════════════════
-
-let choiceCount = 0;
-
-function addChoice() {
-  choiceCount++;
-  const container = document.getElementById('choices-container');
-  
-  const choiceDiv = document.createElement('div');
-  choiceDiv.className = 'choice-builder';
-  choiceDiv.dataset.choiceId = choiceCount;
-  
-  choiceDiv.innerHTML = `
-    <div class="choice-header">
-      <div class="choice-number">${choiceCount}</div>
-      <button class="remove-choice" onclick="removeChoice(${choiceCount})">🗑️ Remove</button>
-    </div>
-    
-    <div class="form-group">
-      <label class="form-label">Choice Icon (emoji)</label>
-      <input type="text" class="form-input" data-field="icon" 
-             placeholder="e.g., 🔍" maxlength="2" value="🔍">
-    </div>
-    
-    <div class="form-group">
-      <label class="form-label">Choice Label (short title)</label>
-      <input type="text" class="form-input" data-field="label"
-             placeholder="e.g., Scout the Perimeter">
-    </div>
-    
-    <div class="form-group">
-      <label class="form-label">Description (what this choice means)</label>
-      <textarea class="form-textarea" data-field="description" rows="3"
-                placeholder="e.g., Observe from a distance. Knowledge before action."></textarea>
-    </div>
-    
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-      <div class="form-group">
-        <label class="form-label">Cost (Storm Shards 💎)</label>
-        <input type="number" class="form-input" data-field="cost" 
-               placeholder="0" min="0" value="5">
-      </div>
-      
-      <div class="form-group">
-        <label class="form-label">Reward (XP)</label>
-        <input type="number" class="form-input" data-field="xp"
-               placeholder="15" min="0" value="15">
-      </div>
-    </div>
-  `;
-  
-  container.appendChild(choiceDiv);
-}
-
-function removeChoice(id) {
-  const choice = document.querySelector(`[data-choice-id="${id}"]`);
-  if (choice) {
-    choice.remove();
-  }
-}
-
-function saveChoices() {
-  const choices = [];
-  const choiceElements = document.querySelectorAll('.choice-builder');
-  
-  choiceElements.forEach((el, index) => {
-    const choiceId = `choice_${index + 1}`;
-    
-    choices.push({
-      id: choiceId,
-      icon: el.querySelector('[data-field="icon"]').value || '🔍',
-      label: el.querySelector('[data-field="label"]').value || 'Untitled Choice',
-      description: el.querySelector('[data-field="description"]').value || '',
-      cost: parseInt(el.querySelector('[data-field="cost"]').value) || 0,
-      xp: parseInt(el.querySelector('[data-field="xp"]').value) || 15
-    });
-  });
-  
-  storyData.chapters.start.choices = choices;
-}
-
-function renderChoices() {
-  const container = document.getElementById('choices-container');
-  container.innerHTML = '';
-  
-  if (storyData.chapters.start.choices.length === 0) {
-    addChoice();
-    addChoice();
-    addChoice();
-  } else {
-    choiceCount = 0;
-    storyData.chapters.start.choices.forEach(choice => {
-      choiceCount++;
-      const choiceDiv = document.createElement('div');
-      choiceDiv.className = 'choice-builder';
-      choiceDiv.dataset.choiceId = choiceCount;
-      
-      choiceDiv.innerHTML = `
-        <div class="choice-header">
-          <div class="choice-number">${choiceCount}</div>
-          <button class="remove-choice" onclick="removeChoice(${choiceCount})">🗑️ Remove</button>
-        </div>
-        
-        <div class="form-group">
-          <label class="form-label">Choice Icon (emoji)</label>
-          <input type="text" class="form-input" data-field="icon" 
-                 placeholder="e.g., 🔍" maxlength="2" value="${choice.icon}">
-        </div>
-        
-        <div class="form-group">
-          <label class="form-label">Choice Label (short title)</label>
-          <input type="text" class="form-input" data-field="label"
-                 placeholder="e.g., Scout the Perimeter" value="${choice.label}">
-        </div>
-        
-        <div class="form-group">
-          <label class="form-label">Description (what this choice means)</label>
-          <textarea class="form-textarea" data-field="description" rows="3"
-                    placeholder="e.g., Observe from a distance.">${choice.description}</textarea>
-        </div>
-        
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-          <div class="form-group">
-            <label class="form-label">Cost (Storm Shards 💎)</label>
-            <input type="number" class="form-input" data-field="cost" 
-                   placeholder="0" min="0" value="${choice.cost}">
+        <!-- EXPANDED SUPPLY CHAIN SECTION -->
+        <article class="card" id="supply-chain">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Layer 1: Upstream Supply Chain Disruption</div>
+              <p class="tagline">
+                Synthetic stimulants depend entirely on precursor chemicals, specialized equipment, and industrial logistics. Controlling these upstream flows creates bottlenecks that constrain production capacity before substances ever reach consumers.
+              </p>
+            </div>
+            <span class="pill pill-info">Upstream Controls</span>
           </div>
+
+          <h2>1️⃣ Precursor Chemical Regulation & Monitoring</h2>
+          <p>
+            Methamphetamine and other ATS require specific precursor chemicals—many with legitimate industrial uses. The goal is not to halt legitimate chemistry but to reduce diversion through transparency, accountability, and strategic controls.
+          </p>
+
+          <div class="expandable">
+            <div class="expandable-header" onclick="toggleExpand(this)">
+              <span class="expandable-title">1.1 International Scheduling & Harmonization</span>
+              <span class="expandable-icon">▼</span>
+            </div>
+            <div class="expandable-content">
+              <p><strong>Challenge:</strong> Traffickers exploit regulatory gaps between jurisdictions, sourcing precursors from countries with weaker controls.</p>
+              <ul>
+                <li><strong>UN Convention Alignment:</strong> Harmonize national precursor schedules with the 1988 UN Convention Against Illicit Traffic in Narcotic Drugs and Psychotropic Substances</li>
+                <li><strong>Regional Frameworks:</strong> Establish regional precursor control agreements (e.g., ASEAN, EU, OAS) with consistent classification systems</li>
+                <li><strong>Dynamic Listing Mechanisms:</strong> Fast-track procedures to temporarily control emerging precursors and designer variants as intelligence identifies new synthetic routes</li>
+                <li><strong>Designer Precursor Detection:</strong> Monitor and rapidly respond to chemical analogues designed to circumvent existing schedules</li>
+                <li><strong>Multi-Tier Classification:</strong> Categorize chemicals by diversion risk (high/medium/low) with proportionate controls</li>
+              </ul>
+              
+              <div class="info-box">
+                <strong>💡 Key Precursors to Monitor:</strong> Pseudoephedrine, ephedrine, phenylacetic acid (PAA), phenylacetone (P-2-P), methylamine, acetic anhydride, and emerging designer variants
+              </div>
+            </div>
+          </div>
+
+          <div class="expandable">
+            <div class="expandable-header" onclick="toggleExpand(this)">
+              <span class="expandable-title">1.2 Licensing, Due Diligence & Supply Chain Transparency</span>
+              <span class="expandable-icon">▼</span>
+            </div>
+            <div class="expandable-content">
+              <p>Make legitimate chemical handlers partners in prevention through clear standards and support.</p>
+              <ul>
+                <li><strong>Tiered Licensing Systems:</strong> Require licenses for manufacturers, distributors, and end-users handling scheduled precursors, with background checks and ongoing compliance reviews</li>
+                <li><strong>Enhanced KYC (Know Your Customer):</strong> Mandate verification of customer identity, business legitimacy, physical location, and intended use with supporting documentation</li>
+                <li><strong>Digital Record-Keeping Standards:</strong> Require standardized electronic transaction logs capturing volumes, dates, customers, and end-use declarations—auditable by regulators</li>
+                <li><strong>Suspicious Transaction Reporting:</strong> Establish clear "red flag" indicators triggering mandatory reporting:
+                  <ul>
+                    <li>Orders exceeding expected volumes for stated business</li>
+                    <li>Cash or cryptocurrency payments for bulk chemicals</li>
+                    <li>Frequent small orders from same or related entities</li>
+                    <li>Delivery to non-commercial addresses</li>
+                    <li>Mismatched business profiles vs. chemical orders</li>
+                    <li>New customers with limited business history</li>
+                  </ul>
+                </li>
+                <li><strong>Legal Protections for Reporters:</strong> Shield reporting entities from liability when acting in good faith</li>
+                <li><strong>Industry Partnership Programs:</strong> Provide training, guidance, and support to legitimate chemical industry to facilitate compliance</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="expandable">
+            <div class="expandable-header" onclick="toggleExpand(this)">
+              <span class="expandable-title">1.3 Trade & Border Monitoring Systems</span>
+              <span class="expandable-icon">▼</span>
+            </div>
+            <div class="expandable-content">
+              <p>International precursor trade requires sophisticated, rights-respecting monitoring.</p>
+              <ul>
+                <li><strong>Pre-Export Notification (PEN) System:</strong> Require exporting states to notify importing states of scheduled chemical shipments, enabling verification of legitimate end-use</li>
+                <li><strong>Real-Time Trade Data Analysis:</strong> Use customs data analytics to identify unusual patterns:
+                  <ul>
+                    <li>Circuitous or illogical routing</li>
+                    <li>Mismatched HS codes and chemical descriptions</li>
+                    <li>Shipments to high-risk transshipment zones</li>
+                    <li>Sudden volume spikes to specific regions</li>
+                  </ul>
+                </li>
+                <li><strong>Container Tracking & Verification:</strong> Track containers through supply chains, cross-referencing manifests with actual contents at inspection points</li>
+                <li><strong>Freight Industry Collaboration:</strong> Partner with shipping companies, ports, and logistics providers for:
+                  <ul>
+                    <li>Staff training on suspicious shipment indicators</li>
+                    <li>Secure reporting channels without liability</li>
+                    <li>Information sharing on trafficking methods</li>
+                  </ul>
+                </li>
+                <li><strong>Risk-Based Inspection Protocols:</strong> Focus inspection resources on highest-risk shipments using intelligence-led profiling</li>
+                <li><strong>International Information Exchange:</strong> Establish secure platforms for customs and regulatory authorities to share real-time intelligence on precursor trafficking patterns</li>
+              </ul>
+            </div>
+          </div>
+
+          <h2>2️⃣ Disrupting Illicit Production Infrastructure</h2>
+          <p>
+            Even with diverted precursors, transformation into finished drugs requires laboratories, expertise, utilities, and stable environments. Each represents a potential intervention point.
+          </p>
+
+          <div class="expandable">
+            <div class="expandable-header" onclick="toggleExpand(this)">
+              <span class="expandable-title">2.1 Environmental, Fire & Safety Enforcement</span>
+              <span class="expandable-icon">▼</span>
+            </div>
+            <div class="expandable-content">
+              <p>Illicit labs frequently violate multiple non-drug laws, providing legal intervention avenues.</p>
+              <ul>
+                <li><strong>Hazardous Materials Regulations:</strong> Strictly enforce rules on storage, handling, and disposal of toxic chemicals</li>
+                <li><strong>Fire Safety Inspections:</strong> Target high-risk zones (industrial parks, warehouses, rural properties) for fire code compliance</li>
+                <li><strong>Occupational Health Enforcement:</strong> Investigate unsafe working conditions that may indicate illicit operations</li>
+                <li><strong>Waste Management Tracking:</strong> Monitor and investigate:
+                  <ul>
+                    <li>Illegal dumping of chemical waste</li>
+                    <li>Unusual requests for hazmat disposal services</li>
+                    <li>Chemical odors or contamination reports</li>
+                  </ul>
+                </li>
+                <li><strong>Zoning & Building Use Audits:</strong> Verify declared business activities match actual use patterns</li>
+                <li><strong>Utility Usage Pattern Analysis:</strong> Monitor (with appropriate legal authority) unusual spikes in electricity, water, or gas consumption indicative of chemical processing</li>
+                <li><strong>Environmental Contamination Response:</strong> Investigate soil and water contamination that may indicate nearby labs</li>
+              </ul>
+              
+              <div class="warning">
+                <strong>⚖️ Rights Consideration:</strong> All inspections must be conducted under appropriate legal authority with respect for property rights and due process. Avoid discriminatory targeting of communities or businesses.
+              </div>
+            </div>
+          </div>
+
+          <div class="expandable">
+            <div class="expandable-header" onclick="toggleExpand(this)">
+              <span class="expandable-title">2.2 Professional Network Engagement & Ethics</span>
+              <span class="expandable-icon">▼</span>
+            </div>
+            <div class="expandable-content">
+              <p>Illicit production often requires skilled professionals—chemists, engineers, equipment suppliers. Engaging these communities ethically is crucial.</p>
+              <ul>
+                <li><strong>Ethics Education in Scientific Training:</strong>
+                  <ul>
+                    <li>Embed anti-diversion content in chemistry, pharmacy, and chemical engineering curricula</li>
+                    <li>Teach case studies illustrating human costs of precursor diversion</li>
+                    <li>Emphasize professional responsibility and ethical boundaries</li>
+                  </ul>
+                </li>
+                <li><strong>Professional Association Partnerships:</strong> Work with chemistry, pharmacy, and engineering associations to:
+                  <ul>
+                    <li>Develop codes of conduct</li>
+                    <li>Provide continuing education on diversion risks</li>
+                    <li>Establish confidential reporting mechanisms</li>
+                  </ul>
+                </li>
+                <li><strong>Whistleblower Protections:</strong> Create secure channels for professionals to report:
+                  <ul>
+                    <li>Pressure to divert precursors</li>
+                    <li>Suspicious hiring or consultation requests</li>
+                    <li>Coercion or threats from criminal networks</li>
+                  </ul>
+                </li>
+                <li><strong>Lab Equipment Sales Monitoring:</strong> Track (within legal bounds) bulk purchases of specialized equipment:
+                  <ul>
+                    <li>Large-scale glassware and reactors</li>
+                    <li>Industrial filtration systems</li>
+                    <li>Vacuum distillation apparatus</li>
+                    <li>Tablet presses and encapsulation equipment</li>
+                  </ul>
+                </li>
+                <li><strong>Support for Coerced Professionals:</strong> Provide exit pathways and protection for scientists coerced into working for criminal organizations</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="expandable">
+            <div class="expandable-header" onclick="toggleExpand(this)">
+              <span class="expandable-title">2.3 Forensic Science & Intelligence Feedback Loops</span>
+              <span class="expandable-icon">▼</span>
+            </div>
+            <div class="expandable-content">
+              <p>Seized samples contain valuable intelligence about production methods, precursor sources, and trafficking networks.</p>
+              <ul>
+                <li><strong>Chemical Signature Profiling:</strong>
+                  <ul>
+                    <li>Analyze impurities, cutting agents, and synthetic byproducts</li>
+                    <li>Identify specific synthetic routes (ephedrine/pseudoephedrine reduction vs. P-2-P synthesis)</li>
+                    <li>Determine precursor sources through isotopic and trace analysis</li>
+                    <li>Link batches to specific production facilities</li>
+                  </ul>
+                </li>
+                <li><strong>Geographic Pattern Mapping:</strong> Track purity levels, cutting agents, and prices across regions to identify:
+                  <ul>
+                    <li>Production hub locations</li>
+                    <li>Distribution network structures</li>
+                    <li>Market saturation and scarcity zones</li>
+                  </ul>
+                </li>
+                <li><strong>Rapid Regulatory Feedback:</strong> Feed forensic insights back into:
+                  <ul>
+                    <li>Precursor control priority lists</li>
+                    <li>Border screening protocols</li>
+                    <li>Law enforcement operational planning</li>
+                  </ul>
+                </li>
+                <li><strong>International Data Sharing:</strong> Share anonymized forensic profiles through secure international networks (e.g., INTERPOL, UNODC) to map transnational production chains</li>
+                <li><strong>Emerging Threat Detection:</strong> Identify new synthetic routes, designer precursors, and novel production methods before they become widespread</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="highlight">
+            <strong>🎯 Upstream Disruption Impact:</strong> By controlling precursor access, we constrain production capacity at its source. This is more sustainable than focusing solely on finished product seizures, which criminals can quickly replace. Precursor control creates lasting supply constraints.
+          </div>
+        </article>
+
+        <!-- TRANSPORT & DISTRIBUTION (EXPANDED) -->
+        <article class="card" id="distribution">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Layer 2: Midstream Transport & Distribution Disruption</div>
+              <p class="tagline">
+                Even successful production means nothing without transport corridors, storage infrastructure, wholesale networks, and retail distribution. Each layer offers strategic intervention opportunities.
+              </p>
+            </div>
+            <span class="pill pill-warn">Midstream Controls</span>
+          </div>
+
+          <h2>3️⃣ Transport & Logistics Chokepoints</h2>
+
+          <div class="expandable">
+            <div class="expandable-header" onclick="toggleExpand(this)">
+              <span class="expandable-title">3.1 Intelligence-Led Border & Corridor Operations</span>
+              <span class="expandable-icon">▼</span>
+            </div>
+            <div class="expandable-content">
+              <ul>
+                <li><strong>Risk-Based Targeting:</strong> Focus inspection resources on:
+                  <ul>
+                    <li>Known trafficking routes based on seizure data</li>
+                    <li>Vehicles/individuals with suspicious travel patterns</li>
+                    <li>Cross-border movements at unusual times</li>
+                    <li>Mismatched cargo declarations</li>
+                  </ul>
+                </li>
+                <li><strong>Technology Integration:</strong>
+                  <ul>
+                    <li>License plate readers (with privacy safeguards)</li>
+                    <li>X-ray and scanning technology for cargo</li>
+                    <li>Drug detection canines</li>
+                    <li>Chemical trace detection equipment</li>
+                  </ul>
+                </li>
+                <li><strong>Mobile Interdiction Teams:</strong> Roving teams on key corridors rather than fixed checkpoints (which traffickers easily avoid)</li>
+                <li><strong>Cross-Border Cooperation:</strong> Joint operations and real-time information sharing between neighboring countries</li>
+                <li><strong>Anti-Corruption Measures:</strong> Robust integrity systems for border officials to prevent compromise</li>
+              </ul>
+              
+              <div class="warning">
+                <strong>⚖️ Rights & Proportionality:</strong> All stops and searches must be based on reasonable suspicion, not profiling by race, ethnicity, or appearance. Privacy rights must be respected.
+              </div>
+            </div>
+          </div>
+
+          <div class="expandable">
+            <div class="expandable-header" onclick="toggleExpand(this)">
+              <span class="expandable-title">3.2 Freight Industry Partnerships</span>
+              <span class="expandable-icon">▼</span>
+            </div>
+            <div class="expandable-content">
+              <ul>
+                <li><strong>Secure Freight Programs:</strong> Certify logistics companies meeting security standards:
+                  <ul>
+                    <li>Background checks for drivers and warehouse staff</li>
+                    <li>GPS tracking and route documentation</li>
+                    <li>Tamper-evident seals and security protocols</li>
+                    <li>Regular security audits</li>
+                  </ul>
+                </li>
+                <li><strong>Training & Awareness:</strong> Educate freight workers on:
+                  <ul>
+                    <li>Signs of cargo tampering</li>
+                    <li>Coercion tactics used by traffickers</li>
+                    <li>Suspicious loading/unloading patterns</li>
+                    <li>How to report concerns safely</li>
+                  </ul>
+                </li>
+                <li><strong>Incentive Structures:</strong> Faster border clearance and reduced inspections for certified secure operators</li>
+                <li><strong>Support for Victimized Workers:</strong> Protect truck drivers and freight workers who report coercion or find themselves unwittingly transporting contraband</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="expandable">
+            <div class="expandable-header" onclick="toggleExpand(this)">
+              <span class="expandable-title">3.3 Postal & Parcel System Safeguards</span>
+              <span class="expandable-icon">▼</span>
+            </div>
+            <div class="expandable-content">
+              <ul>
+                <li><strong>Data-Driven Risk Scoring:</strong> Use metadata (sender, recipient, package characteristics) to prioritize parcels for inspection—NOT mass surveillance of mail content</li>
+                <li><strong>Advanced Detection Technology:</strong>
+                  <ul>
+                    <li>Chemical trace detection systems</li>
+                    <li>X-ray screening for suspicious packages</li>
+                    <li>Canine detection units</li>
+                  </ul>
+                </li>
+                <li><strong>E-Commerce Platform Cooperation:</strong>
+                  <ul>
+                    <li>Monitor for listings of precursors or drugs using coded language</li>
+                    <li>Require verified business accounts for chemical sales</li>
+                    <li>Remove suspicious listings and accounts</li>
+                    <li>Share patterns with law enforcement (under legal process)</li>
+                  </ul>
+                </li>
+                <li><strong>International Postal Cooperation:</strong> Share intelligence on:
+                  <ul>
+                    <li>Known mail-order drug vendors</li>
+                    <li>Packaging methods and signatures</li>
+                    <li>Origin and destination patterns</li>
+                  </ul>
+                </li>
+                <li><strong>Blockchain & Cryptocurrency Tracking:</strong> Investigate crypto payments linked to mail-order drug operations</li>
+              </ul>
+              
+              <div class="warning">
+                <strong>🔒 Privacy Critical:</strong> Mail inspection must be conducted under appropriate legal authority. Mass surveillance of postal communications is unacceptable and violates fundamental rights.
+              </div>
+            </div>
+          </div>
+
+          <h2>4️⃣ Wholesale Network Disruption</h2>
+
+          <div class="expandable">
+            <div class="expandable-header" onclick="toggleExpand(this)">
+              <span class="expandable-title">4.1 Financial Intelligence & Anti-Money Laundering</span>
+              <span class="expandable-icon">▼</span>
+            </div>
+            <div class="expandable-content">
+              <ul>
+                <li><strong>Enhanced FIU Capabilities:</strong> Strengthen Financial Intelligence Units to:
+                  <ul>
+                    <li>Analyze suspicious transaction reports (STRs)</li>
+                    <li>Identify money-laundering typologies</li>
+                    <li>Map financial networks behind drug trafficking</li>
+                    <li>Share intelligence with law enforcement and international partners</li>
+                  </ul>
+                </li>
+                <li><strong>Trade-Based Money Laundering Detection:</strong> Monitor:
+                  <ul>
+                    <li>Over-invoicing and under-invoicing of goods</li>
+                    <li>Phantom shipments</li>
+                    <li>Misuse of bulk cash businesses (casinos, car washes, restaurants)</li>
+                  </ul>
+                </li>
+                <li><strong>Cryptocurrency Tracing:</strong> Develop expertise in tracking Bitcoin and other crypto used in drug transactions</li>
+                <li><strong>Shell Company Investigations:</strong> Identify and investigate corporate structures used to hide trafficking proceeds</li>
+                <li><strong>Asset Seizure (With Due Process):</strong>
+                  <ul>
+                    <li>Seize assets demonstrably linked to trafficking</li>
+                    <li>Ensure strong legal protections against wrongful seizure</li>
+                    <li>Direct seized assets to community restitution and victim services</li>
+                  </ul>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="expandable">
+            <div class="expandable-header" onclick="toggleExpand(this)">
+              <span class="expandable-title">4.2 Property, Real Estate & Infrastructure Controls</span>
+              <span class="expandable-icon">▼</span>
+            </div>
+            <div class="expandable-content">
+              <ul>
+                <li><strong>Landlord Education Programs:</strong> Train property owners and managers to recognize:
+                  <ul>
+                    <li>Stash houses (unusual security, foot traffic, resident behavior)</li>
+                    <li>Drug warehouses (chemical odors, unusual loading activity)</li>
+                    <li>Front businesses (minimal legitimate activity, cash payments)</li>
+                  </ul>
+                </li>
+                <li><strong>Reporting Mechanisms:</strong> Provide clear, non-punitive channels for landlords to report suspicious activity</li>
+                <li><strong>Civil Asset Actions:</strong> Where legally appropriate, pursue civil forfeiture of properties used as trafficking hubs (with strong due-process protections)</li>
+                <li><strong>Business Licensing Oversight:</strong> Enhanced scrutiny for businesses easily exploited as fronts:
+                  <ul>
+                    <li>Cash-intensive businesses</li>
+                    <li>Storage facilities</li>
+                    <li>Import/export companies</li>
+                    <li>Nightlife venues</li>
+                  </ul>
+                </li>
+                <li><strong>Integrated Inspection Teams:</strong> Coordinate fire, health, zoning, labor, and police inspections to identify suspicious operations without over-criminalizing legitimate businesses</li>
+              </ul>
+            </div>
+          </div>
+
+          <h2>5️⃣ Street-Level & Retail Distribution Disruption</h2>
+
+          <div class="expandable">
+            <div class="expandable-header" onclick="toggleExpand(this)">
+              <span class="expandable-title">5.1 Community-Centered Policing & Trust-Building</span>
+              <span class="expandable-icon">▼</span>
+            </div>
+            <div class="expandable-content">
+              <p>Heavy-handed enforcement at the street level often traumatizes communities and erodes trust. Smart approaches prioritize protection and partnership.</p>
+              <ul>
+                <li><strong>Dedicated Community Liaison Officers:</strong>
+                  <ul>
+                    <li>Assign officers trained in trauma-informed practice</li>
+                    <li>Build long-term relationships with community members</li>
+                    <li>Facilitate two-way information sharing</li>
+                    <li>Address community concerns beyond drug enforcement</li>
+                  </ul>
+                </li>
+                <li><strong>Co-Designed Enforcement Priorities:</strong> Involve residents in deciding:
+                  <ul>
+                    <li>Which locations to prioritize (e.g., near schools, playgrounds)</li>
+                    <li>What kinds of dealing are most harmful locally</li>
+                    <li>How enforcement should be conducted to minimize collateral harm</li>
+                  </ul>
+                </li>
+                <li><strong>Anonymous Reporting Tools:</strong>
+                  <ul>
+                    <li>Secure tip lines and digital reporting platforms</li>
+                    <li>Community partners (churches, NGOs) as intermediaries</li>
+                    <li>Protection from retaliation for informants</li>
+                  </ul>
+                </li>
+                <li><strong>Procedural Justice Training:</strong> Ensure officers treat community members with dignity and respect, even during enforcement actions</li>
+                <li><strong>Accountability Mechanisms:</strong> Clear complaint processes and independent oversight of police conduct</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="expandable">
+            <div class="expandable-header" onclick="toggleExpand(this)">
+              <span class="expandable-title">5.2 Exit Pathways for Low-Level Participants</span>
+              <span class="expandable-icon">▼</span>
+            </div>
+            <div class="expandable-content">
+              <p>Street-level dealers are often victims themselves—trapped by addiction, poverty, coercion, or lack of alternatives. Treating them purely as offenders perpetuates cycles.</p>
+              <ul>
+                <li><strong>Diversion & Deflection Programs:</strong>
+                  <ul>
+                    <li>Offer treatment, education, or job training instead of incarceration for low-level, non-violent participants</li>
+                    <li>Link to housing, mental health services, and social supports</li>
+                    <li>Clear criteria for eligibility and success metrics</li>
+                  </ul>
+                </li>
+                <li><strong>Drug Courts & Alternative Justice:</strong>
+                  <ul>
+                    <li>Specialized courts focused on treatment and recovery</li>
+                    <li>Graduated sanctions and incentives</li>
+                    <li>Expungement of records upon successful completion</li>
+                  </ul>
+                </li>
+                <li><strong>Witness & Whistleblower Protection:</strong>
+                  <ul>
+                    <li>Secure housing and identity protection</li>
+                    <li>Legal support and reduced charges for cooperation</li>
+                    <li>Long-term support for life rebuilding</li>
+                  </ul>
+                </li>
+                <li><strong>Trauma-Informed Justice:</strong> Recognize role of childhood adversity, victimization, and structural inequality in recruitment into drug markets</li>
+                <li><strong>Economic Alternatives:</strong> Connect participants to legitimate employment, vocational training, and entrepreneurship opportunities</li>
+              </ul>
+              
+              <div class="highlight">
+                <strong>🌱 Philosophy:</strong> Every person cycling through street-level dealing who exits the market permanently is both a life transformed and a market participant removed—dual victory.
+              </div>
+            </div>
+          </div>
+
+          <div class="expandable">
+            <div class="expandable-header" onclick="toggleExpand(this)">
+              <span class="expandable-title">5.3 Environmental Design & Public Space Strategies</span>
+              <span class="expandable-icon">▼</span>
+            </div>
+            <div class="expandable-content">
+              <ul>
+                <li><strong>"Hot Spot" Physical Redesign:</strong>
+                  <ul>
+                    <li>Improve lighting in areas known for dealing</li>
+                    <li>Modify sight lines and landscaping to reduce concealment</li>
+                    <li>Maintain infrastructure (repair broken windows, graffiti removal)</li>
+                    <li>Ensure changes maintain dignity and usability for residents</li>
+                  </ul>
+                </li>
+                <li><strong>Service Co-Location:</strong> Place health, social, youth, and employment services near high-risk zones:
+                  <ul>
+                    <li>Mobile health clinics</li>
+                    <li>Drop-in centers with food, showers, counseling</li>
+                    <li>Youth programs and after-school activities</li>
+                    <li>Job placement offices</li>
+                  </ul>
+                </li>
+                <li><strong>Community Stewardship Programs:</strong>
+                  <ul>
+                    <li>Support local groups to "claim" and maintain public spaces</li>
+                    <li>Community gardens, public art, and gathering areas</li>
+                    <li>Neighborhood watch and collective care networks</li>
+                  </ul>
+                </li>
+                <li><strong>Business District Revitalization:</strong> Attract legitimate economic activity to areas dominated by drug markets:
+                  <ul>
+                    <li>Small business grants and technical assistance</li>
+                    <li>Tax incentives for businesses locating in recovery zones</li>
+                    <li>Infrastructure improvements and beautification</li>
+                  </ul>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </article>
+
+        <!-- DEMAND REDUCTION (SIGNIFICANTLY EXPANDED) -->
+        <article class="card" id="demand">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Layer 3: Demand Reduction, Treatment & Recovery Systems</div>
+              <p class="tagline">
+                Choking supply without addressing the drivers of demand creates price spikes, more dangerous products, and more violent markets. Durable disruption requires shrinking the customer base through prevention, accessible treatment, and meaningful alternatives.
+              </p>
+            </div>
+            <span class="pill pill-accent">Demand-Side Solutions</span>
+          </div>
+
+          <h2>6️⃣ Prevention & Early Intervention</h2>
+          <p>
+            Effective prevention isn't about scare tactics or "just say no" slogans—it's about building protective factors, resilience, and viable alternatives to high-risk drug use.
+          </p>
+
+          <div class="expandable">
+            <div class="expandable-header" onclick="toggleExpand(this)">
+              <span class="expandable-title">6.1 Youth Resilience & Life Skills Development</span>
+              <span class="expandable-icon">▼</span>
+            </div>
+            <div class="expandable-content">
+              <ul>
+                <li><strong>Evidence-Based Curricula:</strong>
+                  <ul>
+                    <li>Social-emotional learning programs</li>
+                    <li>Decision-making and critical thinking skills</li>
+                    <li>Stress management and emotional regulation</li>
+                    <li>Media literacy to counter drug marketing and glamorization</li>
+                  </ul>
+                </li>
+                <li><strong>Mentoring & Positive Role Models:</strong>
+                  <ul>
+                    <li>Connect youth with caring adult mentors</li>
+                    <li>Peer leadership programs</li>
+                    <li>Cultural and community elder engagement</li>
+                  </ul>
+                </li>
+                <li><strong>Pro-Social Activities:</strong>
+                  <ul>
+                    <li>Sports leagues and arts programs</li>
+                    <li>Community service and volunteering</li>
+                    <li>Academic enrichment and STEM opportunities</li>
+                    <li>Cultural and identity-affirming activities</li>
+                  </ul>
+                </li>
+                <li><strong>Targeted Support for High-Risk Youth:</strong>
+                  <ul>
+                    <li>Those with family addiction or incarceration</li>
+                    <li>Youth experiencing homelessness or housing instability</li>
+                    <li>Those involved in child welfare systems</li>
+                    <li>Youth with untreated mental health conditions</li>
+                  </ul>
+                </li>
+                <li><strong>School-Based Interventions:</strong>
+                  <ul>
+                    <li>On-site counselors and social workers</li>
+                    <li>Early identification of struggling students</li>
+                    <li>Trauma-informed school environments</li>
+                  </ul>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="expandable">
+            <div class="expandable-header" onclick="toggleExpand(this)">
+              <span class="expandable-title">6.2 Addressing Social Determinants of Use</span>
+              <span class="expandable-icon">▼</span>
+            </div>
+            <div class="expandable-content">
+              <p>People don't use drugs in a vacuum. Addressing underlying social and economic conditions reduces vulnerability.</p>
+              <ul>
+                <li><strong>Housing Stability Programs:</strong>
+                  <ul>
+                    <li>Housing-first approaches for people experiencing homelessness</li>
+                    <li>Rental assistance and eviction prevention</li>
+                    <li>Transitional housing for people exiting treatment</li>
+                    <li>Safe, affordable housing as right not luxury</li>
+                  </ul>
+                </li>
+                <li><strong>Employment & Economic Opportunity:</strong>
+                  <ul>
+                    <li>Job training in growth sectors</li>
+                    <li>Apprenticeships and paid internships</li>
+                    <li>Support for people with criminal records seeking employment</li>
+                    <li>Living wage policies and worker protections</li>
+                    <li>Social enterprises providing transitional employment</li>
+                  </ul>
+                </li>
+                <li><strong>Family Support Services:</strong>
+                  <ul>
+                    <li>Parenting education and support groups</li>
+                    <li>Child care assistance</li>
+                    <li>Family counseling and therapy</li>
+                    <li>Respite care for families affected by addiction</li>
+                  </ul>
+                </li>
+                <li><strong>Mental Health Access:</strong>
+                  <ul>
+                    <li>Universal mental health screening and care</li>
+                    <li>Trauma treatment (PTSD, childhood adversity)</li>
+                    <li>Treatment for co-occurring disorders</li>
+                    <li>Culturally appropriate care</li>
+                  </ul>
+                </li>
+                <li><strong>Community Economic Development:</strong>
+                  <ul>
+                    <li>Invest in economic infrastructure in marginalized areas</li>
+                    <li>Support community-controlled development</li>
+                    <li>Local hiring and procurement preferences</li>
+                  </ul>
+                </li>
+              </ul>
+              
+              <div class="highlight">
+                <strong>💡 Evidence Base:</strong> Research consistently shows that addressing poverty, trauma, social exclusion, and lack of opportunity is among the most effective long-term drug prevention strategies.
+              </div>
+            </div>
+          </div>
+
+          <h2>7️⃣ Treatment & Recovery Infrastructure</h2>
+
+          <div class="expandable">
+            <div class="expandable-header" onclick="toggleExpand(this)">
+              <span class="expandable-title">7.1 Accessible, Evidence-Based Treatment</span>
+              <span class="expandable-icon">▼</span>
+            </div>
+            <div class="expandable-content">
+              <ul>
+                <li><strong>Low-Threshold Access:</strong>
+                  <ul>
+                    <li>Eliminate insurance and documentation barriers</li>
+                    <li>Same-day or next-day intake</li>
+                    <li>No waitlists for critical services</li>
+                    <li>Transportation assistance</li>
+                    <li>Childcare during treatment</li>
+                  </ul>
+                </li>
+                <li><strong>Comprehensive Treatment Modalities:</strong>
+                  <ul>
+                    <li><strong>Behavioral Therapies:</strong> Cognitive-behavioral therapy (CBT), contingency management, motivational interviewing</li>
+                    <li><strong>Group Therapy:</strong> Peer support and skill-building groups</li>
+                    <li><strong>Family Therapy:</strong> Heal family systems affected by addiction</li>
+                    <li><strong>Trauma Treatment:</strong> Address underlying trauma driving use</li>
+                    <li><strong>Holistic Approaches:</strong> Mindfulness, yoga, art therapy (as adjuncts)</li>
+                  </ul>
+                </li>
+                <li><strong>Pharmacological Supports (Where Appropriate):</strong>
+                  <ul>
+                    <li>Research on potential medications for stimulant use disorder continues</li>
+                    <li>Treatment of co-occurring conditions (depression, anxiety, ADHD)</li>
+                  </ul>
+                </li>
+                <li><strong>Integrated Co-Occurring Care:</strong> Treat mental health, physical health, and substance use together in coordinated fashion</li>
+                <li><strong>Culturally Responsive Treatment:</strong>
+                  <ul>
+                    <li>Services in multiple languages</li>
+                    <li>Recognition of cultural healing practices</li>
+                    <li>Staff diversity matching community demographics</li>
+                    <li>Gender-specific and LGBTQ+-affirming programming</li>
+                  </ul>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="expandable">
+            <div class="expandable-header" onclick="toggleExpand(this)">
+              <span class="expandable-title">7.2 Long-Term Recovery Support Systems</span>
+              <span class="expandable-icon">▼</span>
+            </div>
+            <div class="expandable-content">
+              <p>Treatment is just the beginning. Long-term recovery requires ongoing support, community, and opportunity.</p>
+              <ul>
+                <li><strong>Recovery Housing:</strong>
+                  <ul>
+                    <li>Sober living environments with peer support</li>
+                    <li>Oxford Houses and other resident-run models</li>
+                    <li>Transitional housing with wraparound services</li>
+                  </ul>
+                </li>
+                <li><strong>Peer Recovery Support:</strong>
+                  <ul>
+                    <li>Peer-run recovery centers and drop-in spaces</li>
+                    <li>Recovery coaching and mentoring</li>
+                    <li>Mutual aid groups (12-step, SMART Recovery, Refuge Recovery)</li>
+                    <li>Employment of people in recovery as peer specialists</li>
+                  </ul>
+                </li>
+                <li><strong>Continuing Care & Aftercare:</strong>
+                  <ul>
+                    <li>Regular check-ins and support groups</li>
+                    <li>Alumni networks from treatment programs</li>
+                    <li>Crisis intervention and relapse prevention planning</li>
+                  </ul>
+                </li>
+                <li><strong>Relapse-Tolerant Systems:</strong>
+                  <ul>
+                    <li>Recognize relapse as common in recovery journeys</li>
+                    <li>Avoid punitive responses that push people away from care</li>
+                    <li>Rapid re-engagement pathways</li>
+                  </ul>
+                </li>
+                <li><strong>Family Healing & Reintegration:</strong>
+                  <ul>
+                    <li>Family counseling and education</li>
+                    <li>Support for partners and children affected by loved one's use</li>
+                    <li>Relationship rebuilding programs</li>
+                  </ul>
+                </li>
+                <li><strong>Recovery-Ready Employment:</strong>
+                  <ul>
+                    <li>Employers committed to hiring people in recovery</li>
+                    <li>Job coaches and workplace accommodations</li>
+                    <li>Protection against discrimination</li>
+                  </ul>
+                </li>
+                <li><strong>Educational & Vocational Advancement:</strong>
+                  <ul>
+                    <li>Scholarships and tuition assistance</li>
+                    <li>GED programs and adult education</li>
+                    <li>Technical training and certifications</li>
+                  </ul>
+                </li>
+              </ul>
+              
+              <div class="info-box">
+                <strong>📊 Impact:</strong> Comprehensive recovery support dramatically improves long-term abstinence rates and reduces return to drug markets—directly shrinking demand.
+              </div>
+            </div>
+          </div>
+
+          <h2>8️⃣ Harm Reduction as Market Disruption</h2>
+
+          <div class="expandable">
+            <div class="expandable-header" onclick="toggleExpand(this)">
+              <span class="expandable-title">8.1 Harm Reduction Services & Their Role</span>
+              <span class="expandable-icon">▼</span>
+            </div>
+            <div class="expandable-content">
+              <p>Harm reduction primarily aims to reduce deaths and disease, but by stabilizing people's lives and building trust, these services create pathways toward treatment and away from chronic use.</p>
+              <ul>
+                <li><strong>Supervised Consumption Sites (Where Legal):</strong>
+                  <ul>
+                    <li>Prevent overdose deaths through medical supervision</li>
+                    <li>Connect participants to treatment when they're ready</li>
+                    <li>Provide access to healthcare, housing support, counseling</li>
+                    <li>Reduce public drug use and discarded paraphernalia</li>
+                    <li>Evidence shows reduced emergency calls and public disorder</li>
+                  </ul>
+                </li>
+                <li><strong>Syringe Service Programs:</strong>
+                  <ul>
+                    <li>Prevent HIV, hepatitis C, and bacterial infections</li>
+                    <li>Safe disposal of used syringes</li>
+                    <li>Distribution of naloxone for opioid overdoses</li>
+                    <li>Gateway to treatment and other services</li>
+                  </ul>
+                </li>
+                <li><strong>Drug Checking Services (Where Permitted):</strong>
+                  <ul>
+                    <li>Allow testing of substances for contaminants and potency</li>
+                    <li>Detect dangerous adulterants early</li>
+                    <li>Provide real-time public health alerts</li>
+                    <li>Create teaching moments about risks</li>
+                    <li>Data informs enforcement priorities</li>
+                  </ul>
+                </li>
+                <li><strong>Mobile Outreach Teams:</strong>
+                  <ul>
+                    <li>Bring services to people who use in street or rural settings</li>
+                    <li>Build relationships and trust over time</li>
+                    <li>Distribute harm reduction supplies</li>
+                    <li>Facilitate treatment entry when individuals are ready</li>
+                  </ul>
+                </li>
+                <li><strong>Overdose Prevention Education:</strong>
+                  <ul>
+                    <li>Train people who use drugs in overdose recognition and response</li>
+                    <li>Distribute naloxone widely</li>
+                    <li>Teach safer use practices</li>
+                  </ul>
+                </li>
+              </ul>
+              
+              <div class="highlight">
+                <strong>🔄 The Connection:</strong> By keeping people alive and connected to care, harm reduction services stabilize lives and create conditions where treatment becomes possible—gradually reducing active demand in the market.
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <!-- NEW SECTION: INTERNATIONAL COOPERATION -->
+        <article class="card" id="international">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Layer 4: International Cooperation & Governance</div>
+              <p class="tagline">
+                Methamphetamine trafficking is inherently transnational. No single country can effectively disrupt global supply chains alone—coordinated international action is essential.
+              </p>
+            </div>
+            <span class="pill pill-info">Global Cooperation</span>
+          </div>
+
+          <h2>9️⃣ Multilateral Frameworks & Agreements</h2>
+
+          <div class="expandable">
+            <div class="expandable-header" onclick="toggleExpand(this)">
+              <span class="expandable-title">9.1 UN Conventions & Specialized Agencies</span>
+              <span class="expandable-icon">▼</span>
+            </div>
+            <div class="expandable-content">
+              <ul>
+                <li><strong>1988 Vienna Convention:</strong>
+                  <ul>
+                    <li>Foundation for international drug control cooperation</li>
+                    <li>Framework for precursor control and asset forfeiture</li>
+                    <li>Mutual legal assistance provisions</li>
+                    <li>Extradition cooperation</li>
+                  </ul>
+                </li>
+                <li><strong>UNODC (UN Office on Drugs and Crime):</strong>
+                  <ul>
+                    <li>Technical assistance and capacity building</li>
+                    <li>Research and data collection</li>
+                    <li>Regional program offices</li>
+                    <li>Alternative development programs</li>
+                  </ul>
+                </li>
+                <li><strong>INCB (International Narcotics Control Board):</strong>
+                  <ul>
+                    <li>Monitor precursor chemical trade</li>
+                    <li>Pre-export notification system (PEN Online)</li>
+                    <li>Incident reporting and alerts</li>
+                  </ul>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="expandable">
+            <div class="expandable-header" onclick="toggleExpand(this)">
+              <span class="expandable-title">9.2 Regional Cooperation Mechanisms</span>
+              <span class="expandable-icon">▼</span>
+            </div>
+            <div class="expandable-content">
+              <ul>
+                <li><strong>ASEAN Drug Monitoring Network:</strong>
+                  <ul>
+                    <li>Real-time intelligence sharing in Southeast Asia</li>
+                    <li>Joint operations and coordinated enforcement</li>
+                    <li>Capacity building and training programs</li>
+                  </ul>
+                </li>
+                <li><strong>European Monitoring Centre for Drugs (EMCDDA):</strong>
+                  <ul>
+                    <li>Data collection and analysis for EU</li>
+                    <li>Early warning system for new substances</li>
+                    <li>Best practice identification and dissemination</li>
+                  </ul>
+                </li>
+                <li><strong>OAS/CICAD (Organization of American States):</strong>
+                  <ul>
+                    <li>Hemispheric cooperation on drug policy</li>
+                    <li>Technical assistance and evaluation</li>
+                    <li>Support for alternative development</li>
+                  </ul>
+                </li>
+                <li><strong>African Union Drug Control Plans:</strong>
+                  <ul>
+                    <li>Regional strategies for African continent</li>
+                    <li>Capacity building for member states</li>
+                    <li>Cross-border cooperation initiatives</li>
+                  </ul>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="expandable">
+            <div class="expandable-header" onclick="toggleExpand(this)">
+              <span class="expandable-title">9.3 Bilateral & Mini-Lateral Partnerships</span>
+              <span class="expandable-icon">▼</span>
+            </div>
+            <div class="expandable-content">
+              <ul>
+                <li><strong>Joint Investigation Teams:</strong>
+                  <ul>
+                    <li>Multi-country teams targeting transnational networks</li>
+                    <li>Shared jurisdiction and evidence protocols</li>
+                    <li>Simultaneous operations across borders</li>
+                  </ul>
+                </li>
+                <li><strong>Intelligence Fusion Centers:</strong>
+                  <ul>
+                    <li>Dedicated facilities for sharing tactical intelligence</li>
+                    <li>Liaison officers from partner countries</li>
+                    <li>Secure communication systems</li>
+                  </ul>
+                </li>
+                <li><strong>Capacity Building Programs:</strong>
+                  <ul>
+                    <li>Training for law enforcement and customs</li>
+                    <li>Technical assistance for forensic labs</li>
+                    <li>Equipment and technology transfers</li>
+                    <li>Support for criminal justice reform</li>
+                  </ul>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <h2>🔟 Diplomatic & Political Strategies</h2>
+
+          <div class="expandable">
+            <div class="expandable-header" onclick="toggleExpand(this)">
+              <span class="expandable-title">10.1 Addressing Source Country Challenges</span>
+              <span class="expandable-icon">▼</span>
+            </div>
+            <div class="expandable-content">
+              <ul>
+                <li><strong>Alternative Development Programs:</strong>
+                  <ul>
+                    <li>Economic alternatives to drug crop cultivation and production</li>
+                    <li>Infrastructure investment in affected regions</li>
+                    <li>Market access for legal crops and products</li>
+                    <li>Social services and education</li>
+                  </ul>
+                </li>
+                <li><strong>Institution Building:</strong>
+                  <ul>
+                    <li>Strengthen rule of law and judicial systems</li>
+                    <li>Anti-corruption programs</li>
+                    <li>Professionalization of law enforcement</li>
+                    <li>Protect and support journalists and civil society</li>
+                  </ul>
+                </li>
+                <li><strong>Conflict Resolution:</strong>
+                  <ul>
+                    <li>Address conflicts that enable drug trafficking</li>
+                    <li>Support peace processes in affected regions</li>
+                    <li>Reduce power vacuums exploited by traffickers</li>
+                  </ul>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="expandable">
+            <div class="expandable-header" onclick="toggleExpand(this)">
+              <span class="expandable-title">10.2 Tackling Corruption & State Capture</span>
+              <span class="expandable-icon">▼</span>
+            </div>
+            <div class="expandable-content">
+              <p>Drug trafficking thrives where state institutions are corrupted. Anti-corruption is inseparable from effective supply disruption.</p>
+              <ul>
+                <li><strong>Vetting & Integrity Systems:</strong>
+                  <ul>
+                    <li>Background checks for law enforcement and border officials</li>
+                    <li>Financial disclosure requirements</li>
+                    <li>Periodic polygraph testing (where legally appropriate)</li>
+                    <li>Internal affairs and anti-corruption units</li>
+                  </ul>
+                </li>
+                <li><strong>Whistleblower Protection:</strong>
+                  <ul>
+                    <li>Secure channels for reporting corruption</li>
+                    <li>Legal protections and rewards for informants</li>
+                    <li>International evacuation and witness protection</li>
+                  </ul>
+                </li>
+                <li><strong>International Anti-Corruption Mechanisms:</strong>
+                  <ul>
+                    <li>UN Convention Against Corruption (UNCAC) implementation</li>
+                    <li>Asset recovery and repatriation</li>
+                    <li>Sanctions on corrupt officials</li>
+                    <li>Support for independent anti-corruption commissions</li>
+                  </ul>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </article>
+
+        <!-- NEW SECTION: TECHNOLOGY & DATA -->
+        <article class="card" id="technology">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Layer 5: Technology, Data & Privacy-Respecting Innovation</div>
+              <p class="tagline">
+                Modern stimulant markets adapt rapidly. Effective disruption requires sophisticated data analysis, emerging technologies, and strong privacy safeguards to prevent misuse.
+              </p>
+            </div>
+            <span class="pill pill-warn">Technology & Ethics</span>
+          </div>
+
+          <h2>1️⃣1️⃣ Data Integration & Analytics</h2>
+
+          <div class="expandable">
+            <div class="expandable-header" onclick="toggleExpand(this)">
+              <span class="expandable-title">11.1 Multi-Source Data Platforms</span>
+              <span class="expandable-icon">▼</span>
+            </div>
+            <div class="expandable-content">
+              <ul>
+                <li><strong>Health System Data:</strong>
+                  <ul>
+                    <li>Emergency department visits and presentations</li>
+                    <li>Overdose incidents and outcomes</li>
+                    <li>Treatment admissions and wait times</li>
+                    <li>Toxicology and forensic testing results</li>
+                    <li><em>Privacy: Fully anonymized and aggregated</em></li>
+                  </ul>
+                </li>
+                <li><strong>Law Enforcement Data:</strong>
+                  <ul>
+                    <li>Seizure quantities, locations, and purity</li>
+                    <li>Arrest and investigation patterns</li>
+                    <li>Trafficking route intelligence</li>
+                    <li><em>Privacy: Need-to-know access with oversight</em></li>
+                  </ul>
+                </li>
+                <li><strong>Trade & Financial Data:</strong>
+                  <ul>
+                    <li>Precursor chemical trade volumes</li>
+                    <li>Suspicious financial transaction reports</li>
+                    <li>Customs and border crossing data</li>
+                    <li><em>Privacy: Aggregated for pattern analysis</em></li>
+                  </ul>
+                </li>
+                <li><strong>Community-Reported Data:</strong>
+                  <ul>
+                    <li>Community surveys and qualitative reports</li>
+                    <li>Harm reduction service encounters</li>
+                    <li>Social service agency observations</li>
+                    <li><em>Privacy: Fully de-identified</em></li>
+                  </ul>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="expandable">
+            <div class="expandable-header" onclick="toggleExpand(this)">
+              <span class="expandable-title">11.2 Analytical Methods (High-Level Concepts)</span>
+              <span class="expandable-icon">▼</span>
+            </div>
+            <div class="expandable-content">
+              <p class="muted"><em>Note: These are conceptual approaches for expert implementation with strong safeguards—not operational details.</em></p>
+              <ul>
+                <li><strong>Trend Monitoring Dashboards:</strong>
+                  <ul>
+                    <li>Real-time visualization of availability, price, purity</li>
+                    <li>Geographic hot-spot mapping (neighborhood-level, not individual)</li>
+                    <li>Early warning system for contaminated supplies</li>
+                  </ul>
+                </li>
+                <li><strong>Predictive Analytics:</strong>
+                  <ul>
+                    <li>Identify emerging trafficking routes before they mature</li>
+                    <li>Forecast demand spikes based on social and economic indicators</li>
+                    <li>Predict areas at risk for market expansion</li>
+                    <li><em>Limitations: Predictions are probabilistic, not deterministic</em></li>
+                  </ul>
+                </li>
+                <li><strong>Network Analysis:</strong>
+                  <ul>
+                    <li>Map relationships between seizures, locations, and cases</li>
+                    <li>Identify key nodes in trafficking networks</li>
+                    <li>Understand market structure and vulnerabilities</li>
+                    <li><em>Focus: Organizations and patterns, not individual surveillance</em></li>
+                  </ul>
+                </li>
+                <li><strong>Impact Evaluation:</strong>
+                  <ul>
+                    <li>Quasi-experimental designs to assess policy effectiveness</li>
+                    <li>Compare outcomes before/after interventions</li>
+                    <li>Identify which strategies work in which contexts</li>
+                  </ul>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <h2>1️⃣2️⃣ Emerging Technologies</h2>
+
+          <div class="expandable">
+            <div class="expandable-header" onclick="toggleExpand(this)">
+              <span class="expandable-title">12.1 Detection & Identification Technologies</span>
+              <span class="expandable-icon">▼</span>
+            </div>
+            <div class="expandable-content">
+              <ul>
+                <li><strong>Advanced Chemical Detection:</strong>
+                  <ul>
+                    <li>Portable mass spectrometry for field testing</li>
+                    <li>Ion mobility spectrometry at borders</li>
+                    <li>Chemical trace detection systems</li>
+                    <li>Hyperspectral imaging for package screening</li>
+                  </ul>
+                </li>
+                <li><strong>Blockchain for Supply Chain Transparency:</strong>
+                  <ul>
+                    <li>Immutable records of legitimate precursor shipments</li>
+                    <li>End-to-end tracking from manufacturer to end-user</li>
+                    <li>Detect anomalies and diversions</li>
+                  </ul>
+                </li>
+                <li><strong>Satellite & Remote Sensing:</strong>
+                  <ul>
+                    <li>Identify potential illicit lab locations (heat signatures, chemical emissions)</li>
+                    <li>Monitor trafficking routes in remote areas</li>
+                    <li>Track large-scale environmental contamination</li>
+                  </ul>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="expandable">
+            <div class="expandable-header" onclick="toggleExpand(this)">
+              <span class="expandable-title">12.2 Digital Market Monitoring</span>
+              <span class="expandable-icon">▼</span>
+            </div>
+            <div class="expandable-content">
+              <ul>
+                <li><strong>Surface Web Monitoring:</strong>
+                  <ul>
+                    <li>Identify listings on e-commerce platforms</li>
+                    <li>Detect coded language and euphemisms</li>
+                    <li>Track payment methods and shipping patterns</li>
+                  </ul>
+                </li>
+                <li><strong>Dark Web Intelligence:</strong>
+                  <ul>
+                    <li>Monitor underground marketplaces</li>
+                    <li>Track cryptocurrency transactions</li>
+                    <li>Identify major vendors and supply chains</li>
+                    <li><em>Challenge: Encrypted communications require legal authority</em></li>
+                  </ul>
+                </li>
+                <li><strong>Social Media Analysis:</strong>
+                  <ul>
+                    <li>Identify marketing and promotion of drugs</li>
+                    <li>Track emerging use trends and slang</li>
+                    <li>Early detection of contamination outbreaks</li>
+                    <li><em>Privacy: Public posts only, no bulk data harvesting</em></li>
+                  </ul>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <h2>1️⃣3️⃣ Privacy, Civil Liberties & Oversight</h2>
+
+          <div class="danger">
+            <strong>🚨 Critical Safeguards:</strong> Technology used to fight drug trafficking can easily be abused for mass surveillance, political repression, or discrimination. Strong legal and technical guardrails are absolutely essential and non-negotiable.
+          </div>
+
+          <div class="expandable">
+            <div class="expandable-header" onclick="toggleExpand(this)">
+              <span class="expandable-title">13.1 Legal & Procedural Safeguards</span>
+              <span class="expandable-icon">▼</span>
+            </div>
+            <div class="expandable-content">
+              <ul>
+                <li><strong>Warrant Requirements:</strong>
+                  <ul>
+                    <li>Clear judicial authorization for invasive surveillance</li>
+                    <li>Probable cause standards for digital searches</li>
+                    <li>Time-limited authorizations with renewal requirements</li>
+                  </ul>
+                </li>
+                <li><strong>Data Minimization:</strong>
+                  <ul>
+                    <li>Collect only necessary data for specific, stated purposes</li>
+                    <li>Automatic deletion of non-relevant information</li>
+                    <li>Prohibition on secondary use without new authorization</li>
+                  </ul>
+                </li>
+                <li><strong>Purpose Limitation:</strong>
+                  <ul>
+                    <li>Data collected for drug enforcement cannot be repurposed for immigration, political surveillance, etc.</li>
+                    <li>Strict firewalls between databases</li>
+                  </ul>
+                </li>
+                <li><strong>Independent Oversight Bodies:</strong>
+                  <ul>
+                    <li>Privacy commissions with audit authority</li>
+                    <li>Inspector general investigations</li>
+                    <li>Public reporting on surveillance use</li>
+                  </ul>
+                </li>
+                <li><strong>Complaint & Remedy Mechanisms:</strong>
+                  <ul>
+                    <li>Clear processes for individuals to challenge surveillance</li>
+                    <li>Legal aid for those challenging government actions</li>
+                    <li>Compensation for wrongful surveillance or data breaches</li>
+                  </ul>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="expandable">
+            <div class="expandable-header" onclick="toggleExpand(this)">
+              <span class="expandable-title">13.2 Technical Privacy Protections</span>
+              <span class="expandable-icon">▼</span>
+            </div>
+            <div class="expandable-content">
+              <ul>
+                <li><strong>Anonymization & Aggregation:</strong>
+                  <ul>
+                    <li>Strip personally identifiable information before analysis</li>
+                    <li>Report only aggregate statistics, not individual records</li>
+                    <li>K-anonymity and differential privacy techniques</li>
+                  </ul>
+                </li>
+                <li><strong>Encryption & Access Controls:</strong>
+                  <ul>
+                    <li>End-to-end encryption for sensitive databases</li>
+                    <li>Multi-factor authentication for system access</li>
+                    <li>Audit logs of all data access</li>
+                  </ul>
+                </li>
+                <li><strong>Algorithmic Transparency:</strong>
+                  <ul>
+                    <li>Explainable AI and predictive models</li>
+                    <li>Bias testing and fairness audits</li>
+                    <li>Public documentation of analytical methods</li>
+                  </ul>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="expandable">
+            <div class="expandable-header" onclick="toggleExpand(this)">
+              <span class="expandable-title">13.3 Anti-Discrimination Protections</span>
+              <span class="expandable-icon">▼</span>
+            </div>
+            <div class="expandable-content">
+              <ul>
+                <li><strong>Prohibition on Profiling:</strong>
+                  <ul>
+                    <li>Ban on targeting based on race, ethnicity, religion, national origin</li>
+                    <li>Algorithmic fairness requirements</li>
+                    <li>Regular bias audits of predictive systems</li>
+                  </ul>
+                </li>
+                <li><strong>Community Input:</strong>
+                  <ul>
+                    <li>Consult affected communities before deploying surveillance technologies</li>
+                    <li>Community oversight boards</li>
+                    <li>Right to opt-out of certain data collection (where feasible)</li>
+                  </ul>
+                </li>
+                <li><strong>Impact Assessments:</strong>
+                  <ul>
+                    <li>Mandatory human rights impact assessments for new technologies</li>
+                    <li>Public disclosure of findings</li>
+                    <li>Sunset provisions requiring periodic reauthorization</li>
+                  </ul>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </article>
+
+        <!-- NEW SECTION: IMPLEMENTATION & ADAPTATION -->
+        <article class="card" id="implementation">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Layer 6: Implementation, Adaptation & Context Specificity</div>
+              <p class="tagline">
+                No single blueprint works everywhere. Successful implementation requires adapting strategies to local contexts, cultures, resources, and market structures—with flexibility to learn and adjust.
+              </p>
+            </div>
+            <span class="pill pill-accent">Adaptive Implementation</span>
+          </div>
+
+          <h2>1️⃣4️⃣ Context Assessment & Planning</h2>
+
+          <div class="expandable">
+            <div class="expandable-header" onclick="toggleExpand(this)">
+              <span class="expandable-title">14.1 Understanding Local Market Dynamics</span>
+              <span class="expandable-icon">▼</span>
+            </div>
+            <div class="expandable-content">
+              <p>Before implementing interventions, understand the specific characteristics of your local market:</p>
+              <ul>
+                <li><strong>Market Structure:</strong>
+                  <ul>
+                    <li>Locally produced vs. imported?</li>
+                    <li>Centralized vs. fragmented distribution?</li>
+                    <li>Relationship between stimulant markets and other drug markets?</li>
+                    <li>Degree of violence and organization</li>
+                  </ul>
+                </li>
+                <li><strong>User Demographics & Patterns:</strong>
+                  <ul>
+                    <li>Age, gender, socioeconomic profiles</li>
+                    <li>Routes of administration (smoking, injection, oral)</li>
+                    <li>Polysubstance use patterns</li>
+                    <li>Geographic concentration vs. dispersion</li>
+                  </ul>
+                </li>
+                <li><strong>Social Drivers:</strong>
+                  <ul>
+                    <li>Unemployment and economic conditions</li>
+                    <li>Trauma and adverse childhood experiences</li>
+                    <li>Cultural factors and substance use norms</li>
+                    <li>Availability of social supports</li>
+                  </ul>
+                </li>
+                <li><strong>Existing Response Capacity:</strong>
+                  <ul>
+                    <li>Treatment availability and quality</li>
+                    <li>Law enforcement resources and corruption levels</li>
+                    <li>Community organization and civil society strength</li>
+                    <li>Political will and leadership</li>
+                  </ul>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="expandable">
+            <div class="expandable-header" onclick="toggleExpand(this)">
+              <span class="expandable-title">14.2 Stakeholder Engagement & Co-Design</span>
+              <span class="expandable-icon">▼</span>
+            </div>
+            <div class="expandable-content">
+              <ul>
+                <li><strong>People with Lived Experience:</strong>
+                  <ul>
+                    <li>Include people who use/used drugs in planning</li>
+                    <li>Compensate for their expertise and time</li>
+                    <li>Create safe, non-judgmental participation spaces</li>
+                  </ul>
+                </li>
+                <li><strong>Affected Communities:</strong>
+                  <ul>
+                    <li>Community forums and listening sessions</li>
+                    <li>Participatory research and needs assessment</li>
+                    <li>Community representation on governance bodies</li>
+                  </ul>
+                </li>
+                <li><strong>Multi-Sector Partners:</strong>
+                  <ul>
+                    <li>Health, law enforcement, education, housing, employment</li>
+                    <li>NGOs and community organizations</li>
+                    <li>Faith communities and cultural leaders</li>
+                    <li>Business sector and employers</li>
+                  </ul>
+                </li>
+                <li><strong>Cross-Jurisdictional Coordination:</strong>
+                  <ul>
+                    <li>Align strategies across municipal, regional, national levels</li>
+                    <li>Avoid displacement to neighboring jurisdictions</li>
+                    <li>Share resources and lessons learned</li>
+                  </ul>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <h2>1️⃣5️⃣ Resource Allocation & Sustainability</h2>
+
+          <div class="expandable">
+            <div class="expandable-header" onclick="toggleExpand(this)">
+              <span class="expandable-title">15.1 Balanced Investment Across Pillars</span>
+              <span class="expandable-icon">▼</span>
+            </div>
+            <div class="expandable-content">
+              <ul>
+                <li><strong>Supply Reduction Investments:</strong>
+                  <ul>
+                    <li>Border and customs infrastructure</li>
+                    <li>Law enforcement training and equipment</li>
+                    <li>Forensic laboratory capacity</li>
+                    <li>International cooperation mechanisms</li>
+                  </ul>
+                </li>
+                <li><strong>Demand Reduction Investments:</strong>
+                  <ul>
+                    <li>Treatment and recovery services (often underfunded)</li>
+                    <li>Prevention programs in schools and communities</li>
+                    <li>Workforce development and economic alternatives</li>
+                    <li>Housing and social support systems</li>
+                  </ul>
+                </li>
+                <li><strong>Harm Reduction Investments:</strong>
+                  <ul>
+                    <li>Supervised consumption sites (where legal)</li>
+                    <li>Syringe programs and naloxone distribution</li>
+                    <li>Drug checking services</li>
+                    <li>Mobile outreach teams</li>
+                  </ul>
+                </li>
+                <li><strong>Research & Evaluation:</strong>
+                  <ul>
+                    <li>Data infrastructure and analysis capacity</li>
+                    <li>Impact evaluation studies</li>
+                    <li>Innovation and pilot projects</li>
+                  </ul>
+                </li>
+              </ul>
+              
+              <div class="warning">
+                <strong>⚠️ Typical Imbalance:</strong> Many jurisdictions spend 70-80% on enforcement and only 20-30% on treatment, prevention, and harm reduction—despite evidence that balanced approaches are more effective. Reassess your allocation.
+              </div>
+            </div>
+          </div>
+
+          <div class="expandable">
+            <div class="expandable-header" onclick="toggleExpand(this)">
+              <span class="expandable-title">15.2 Sustainable Funding Models</span>
+              <span class="expandable-icon">▼</span>
+            </div>
+            <div class="expandable-content">
+              <ul>
+                <li><strong>Dedicated Tax Revenue:</strong>
+                  <ul>
+                    <li>Excise taxes on alcohol or tobacco directed to drug programs</li>
+                    <li>Cannabis tax revenue (in legalized jurisdictions)</li>
+                    <li>Ensure funding stability over election cycles</li>
+                  </ul>
+                </li>
+                <li><strong>Asset Forfeiture Reinvestment:</strong>
+                  <ul>
+                    <li>Direct portion of seized assets to treatment and community services</li>
+                    <li>Prioritize funding for areas most affected by trafficking</li>
+                    <li>Transparent accounting and community input on spending</li>
+                  </ul>
+                </li>
+                <li><strong>International Development Assistance:</strong>
+                  <ul>
+                    <li>Grants from international bodies (UN, World Bank)</li>
+                    <li>Bilateral aid for capacity building</li>
+                    <li>Foundation support for innovation</li>
+                  </ul>
+                </li>
+                <li><strong>Public-Private Partnerships:</strong>
+                  <ul>
+                    <li>Corporate social responsibility initiatives</li>
+                    <li>Social impact bonds for treatment programs</li>
+                    <li>Philanthropic partnerships</li>
+                  </ul>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <h2>1️⃣6️⃣ Adaptive Management & Learning</h2>
+
+          <div class="expandable">
+            <div class="expandable-header" onclick="toggleExpand(this)">
+              <span class="expandable-title">16.1 Monitoring, Evaluation & Learning Loops</span>
+              <span class="expandable-icon">▼</span>
+            </div>
+            <div class="expandable-content">
+              <ul>
+                <li><strong>Theory of Change Frameworks:</strong>
+                  <ul>
+                    <li>Articulate how interventions are expected to create change</li>
+                    <li>Identify assumptions that need testing</li>
+                    <li>Make causal pathways explicit</li>
+                  </ul>
+                </li>
+                <li><strong>Real-Time Monitoring:</strong>
+                  <ul>
+                    <li>Track leading indicators (not just final outcomes)</li>
+                    <li>Early detection of implementation challenges</li>
+                    <li>Rapid feedback to program managers</li>
+                  </ul>
+                </li>
+                <li><strong>Rigorous Evaluation:</strong>
+                  <ul>
+                    <li>Use control groups or comparison areas where ethical</li>
+                    <li>Measure both intended and unintended effects</li>
+                    <li>Assess cost-effectiveness</li>
+                    <li>Long-term follow-up, not just short-term metrics</li>
+                  </ul>
+                </li>
+                <li><strong>Learning Communities:</strong>
+                  <ul>
+                    <li>Regular convenings of practitioners to share lessons</li>
+                    <li>Peer learning and technical assistance networks</li>
+                    <li>Documentation of promising practices and failures</li>
+                  </ul>
+                </li>
+                <li><strong>Adaptive Decision-Making:</strong>
+                  <ul>
+                    <li>Use evaluation data to adjust strategies in real-time</li>
+                    <li>Willingness to discontinue ineffective programs</li>
+                    <li>Scale up what works, adapt what shows promise</li>
+                  </ul>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="expandable">
+            <div class="expandable-header" onclick="toggleExpand(this)">
+              <span class="expandable-title">16.2 Addressing Unintended Consequences</span>
+              <span class="expandable-icon">▼</span>
+            </div>
+            <div class="expandable-content">
+              <p>Even well-intended interventions can have harmful side effects. Monitor for and address:</p>
+              <ul>
+                <li><strong>Market Displacement:</strong>
+                  <ul>
+                    <li>Crackdowns in one area push markets to neighboring communities</li>
+                    <li>Solution: Coordinate regionally, don't just displace problems</li>
+                  </ul>
+                </li>
+                <li><strong>Increased Violence:</strong>
+                  <ul>
+                    <li>Enforcement creates power vacuums fought over violently</li>
+                    <li>Solution: Targeted approach to highest-harm actors, support community stabilization</li>
+                  </ul>
+                </li>
+                <li><strong>Community Trauma:</strong>
+                  <ul>
+                    <li>Aggressive policing traumatizes residents, especially children</li>
+                    <li>Solution: Trauma-informed practices, community oversight</li>
+                  </ul>
+                </li>
+                <li><strong>Treatment Bottlenecks:</strong>
+                  <ul>
+                    <li>Increased referrals overwhelm treatment capacity</li>
+                    <li>Solution: Scale treatment in parallel with enforcement</li>
+                  </ul>
+                </li>
+                <li><strong>Product Contamination:</strong>
+                  <ul>
+                    <li>Market disruption leads dealers to cut drugs with more dangerous substances</li>
+                    <li>Solution: Drug checking services, public health alerts</li>
+                  </ul>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </article>
+
+        <!-- NEW SECTION: MEASUREMENT & SUCCESS METRICS -->
+        <article class="card" id="measurement">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Layer 7: Measurement, Success Metrics & Accountability</div>
+              <p class="tagline">
+                "What gets measured gets managed." Effective disruption requires moving beyond simplistic metrics (arrests, seizures) to comprehensive indicators of reduced harm, market shrinkage, and community wellbeing.
+              </p>
+            </div>
+            <span class="pill pill-info">Outcomes & Impact</span>
+          </div>
+
+          <h2>1️⃣7️⃣ Redefining Success</h2>
+
+          <div class="expandable">
+            <div class="expandable-header" onclick="toggleExpand(this)">
+              <span class="expandable-title">17.1 Moving Beyond Arrests & Seizures</span>
+              <span class="expandable-icon">▼</span>
+            </div>
+            <div class="expandable-content">
+              <p><strong>Traditional metrics have perverse incentives:</strong></p>
+              <ul>
+                <li>High arrest numbers may just indicate over-policing of marginalized communities</li>
+                <li>Large seizures might show market growth, not shrinkage</li>
+                <li>These metrics say nothing about actual harm reduction</li>
+              </ul>
+              
+              <p><strong>Better outcome-focused metrics:</strong></p>
+              <ul>
+                <li><strong>Market Indicators:</strong>
+                  <ul>
+                    <li>Price increases (indicating reduced supply)</li>
+                    <li>Purity decreases (indicating disrupted supply chains)</li>
+                    <li>Reduced retail availability (fewer dealers, longer search times)</li>
+                    <li>Treatment-seeking as proportion of user population</li>
+                  </ul>
+                </li>
+                <li><strong>Health Outcomes:</strong>
+                  <ul>
+                    <li>Reduced overdose deaths</li>
+                    <li>Fewer emergency department presentations</li>
+                    <li>Decreased HIV and hepatitis C transmission</li>
+                    <li>Improved mental health indicators</li>
+                  </ul>
+                </li>
+                <li><strong>Social Outcomes:</strong>
+                  <ul>
+                    <li>Reduced property and violent crime</li>
+                    <li>Increased employment among people in recovery</li>
+                    <li>Improved child welfare indicators</li>
+                    <li>Community perception of safety and wellbeing</li>
+                  </ul>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="expandable">
+            <div class="expandable-header" onclick="toggleExpand(this)">
+              <span class="expandable-title">17.2 Comprehensive Indicator Framework</span>
+              <span class="expandable-icon">▼</span>
+            </div>
+            <div class="expandable-content">
+              <div class="three-col-list">
+                <div>
+                  <h4>📉 Supply Indicators</h4>
+                  <ul>
+                    <li>Precursor seizure quantities</li>
+                    <li>Lab dismantling frequency</li>
+                    <li>Average street purity levels</li>
+                    <li>Price per pure gram trends</li>
+                    <li>Days to obtain drug (scarcity)</li>
+                    <li>Border interdiction success rates</li>
+                  </ul>
+                </div>
+                <div>
+                  <h4>❤️ Demand Indicators</h4>
+                  <ul>
+                    <li>Past-month use prevalence</li>
+                    <li>Treatment admissions</li>
+                    <li>Treatment completion rates</li>
+                    <li>Sustained recovery (6mo, 12mo)</li>
+                    <li>Prevention program reach</li>
+                    <li>Youth risk perception</li>
+                  </ul>
+                </div>
+                <div>
+                  <h4>🏥 Harm Indicators</h4>
+                  <ul>
+                    <li>Overdose death rate</li>
+                    <li>Non-fatal overdoses</li>
+                    <li>Disease transmission rates</li>
+                    <li>ED visits for stimulant toxicity</li>
+                    <li>Psychiatric hospitalizations</li>
+                    <li>Family/child protective services</li>
+                  </ul>
+                </div>
+                <div>
+                  <h4>👥 Community Indicators</h4>
+                  <ul>
+                    <li>Violent crime rates</li>
+                    <li>Property crime rates</li>
+                    <li>Community cohesion surveys</li>
+                    <li>Trust in institutions</li>
+                    <li>Economic indicators (employment)</li>
+                    <li>Housing stability rates</li>
+                  </ul>
+                </div>
+                <div>
+                  <h4>⚖️ Justice Indicators</h4>
+                  <ul>
+                    <li>Diversion program enrollment</li>
+                    <li>Recidivism rates</li>
+                    <li>Racial equity in enforcement</li>
+                    <li>Complaint rates against police</li>
+                    <li>Use of force incidents</li>
+                    <li>Community satisfaction with justice</li>
+                  </ul>
+                </div>
+                <div>
+                  <h4>💰 Economic Indicators</h4>
+                  <ul>
+                    <li>Cost per quality-adjusted life year</li>
+                    <li>Healthcare cost savings</li>
+                    <li>Criminal justice cost reductions</li>
+                    <li>Economic productivity gains</li>
+                    <li>Social services cost changes</li>
+                    <li>Return on investment analyses</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <h2>1️⃣8️⃣ Transparency & Public Accountability</h2>
+
+          <div class="expandable">
+            <div class="expandable-header" onclick="toggleExpand(this)">
+              <span class="expandable-title">18.1 Public Reporting & Dashboards</span>
+              <span class="expandable-icon">▼</span>
+            </div>
+            <div class="expandable-content">
+              <ul>
+                <li><strong>Regular Public Reports:</strong>
+                  <ul>
+                    <li>Quarterly and annual progress reports</li>
+                    <li>Plain-language summaries for general public</li>
+                    <li>Detailed technical reports for researchers and policymakers</li>
+                    <li>Honest assessment of both successes and challenges</li>
+                  </ul>
+                </li>
+                <li><strong>Interactive Data Dashboards:</strong>
+                  <ul>
+                    <li>Public-facing visualizations of key indicators</li>
+                    <li>Geographic breakdowns (while protecting privacy)</li>
+                    <li>Trend lines showing progress over time</li>
+                    <li>Comparison to peer jurisdictions</li>
+                  </ul>
+                </li>
+                <li><strong>Community Forums:</strong>
+                  <ul>
+                    <li>Regular public meetings to present findings</li>
+                    <li>Q&A sessions with leadership</li>
+                    <li>Solicit community feedback on priorities</li>
+                  </ul>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="expandable">
+            <div class="expandable-header" onclick="toggleExpand(this)">
+              <span class="expandable-title">18.2 Independent Oversight & Evaluation</span>
+              <span class="expandable-icon">▼</span>
+            </div>
+            <div class="expandable-content">
+              <ul>
+                <li><strong>External Evaluators:</strong>
+                  <ul>
+                    <li>Contract independent researchers for program evaluation</li>
+                    <li>Ensure evaluators have autonomy and protection</li>
+                    <li>Publish findings even when unfavorable</li>
+                  </ul>
+                </li>
+                <li><strong>Oversight Commissions:</strong>
+                  <ul>
+                    <li>Multi-stakeholder bodies with community representation</li>
+                    <li>Authority to review programs and data</li>
+                    <li>Recommend course corrections</li>
+                  </ul>
+                </li>
+                <li><strong>Academic Partnerships:</strong>
+                  <ul>
+                    <li>Collaborate with universities on research</li>
+                    <li>Support graduate student research on programs</li>
+                    <li>Contribute to evidence base for field</li>
+                  </ul>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="highlight">
+            <strong>🎯 Ultimate Metric:</strong> Are fewer people using methamphetamine destructively, are fewer people dying, and are communities safer and more resilient? Everything else is a proxy. Keep focused on outcomes that matter to real people's lives.
+          </div>
+        </article>
+
+        <!-- CLOSING SYNTHESIS -->
+        <article class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">🌟 Synthesis: Integrating the Seven Layers</div>
+              <p class="tagline">
+                Effective amphetamine supply disruption is not a single strategy but a coordinated, adaptive system operating across multiple layers simultaneously.
+              </p>
+            </div>
+            <span class="pill pill-accent">Integration</span>
+          </div>
+
+          <div class="process-flow">
+            <div class="process-step">
+              <div class="process-step-title">Upstream</div>
+              <div class="process-step-desc">Choke precursors & production</div>
+            </div>
+            <div class="process-step">
+              <div class="process-step-title">Midstream</div>
+              <div class="process-step-desc">Disrupt transport & wholesale</div>
+            </div>
+            <div class="process-step">
+              <div class="process-step-title">Downstream</div>
+              <div class="process-step-desc">Reduce harm & demand</div>
+            </div>
+            <div class="process-step">
+              <div class="process-step-title">Foundation</div>
+              <div class="process-step-desc">Build resilient communities</div>
+            </div>
+          </div>
+
+          <h3>Core Integration Principles</h3>
+          <div class="two-col-list">
+            <div>
+              <h4>⚙️ Systems Coordination</h4>
+              <ul>
+                <li>No single lever alone is sufficient</li>
+                <li>Interventions must be synchronized and mutually reinforcing</li>
+                <li>Avoid working at cross-purposes (e.g., enforcement without treatment capacity)</li>
+                <li>Regular cross-sector coordination meetings</li>
+              </ul>
+            </div>
+            <div>
+              <h4>🔄 Feedback Loops</h4>
+              <ul>
+                <li>Share intelligence across supply/demand efforts</li>
+                <li>Let health data inform enforcement priorities</li>
+                <li>Use enforcement data to guide treatment outreach</li>
+                <li>Community voices inform all strategies</li>
+              </ul>
+            </div>
+            <div>
+              <h4>⚖️ Balance & Proportionality</h4>
+              <ul>
+                <li>Match resources to evidence of effectiveness</li>
+                <li>Avoid over-investing in least effective approaches</li>
+                <li>Balance enforcement with treatment (not 80/20 split)</li>
+                <li>Human rights as non-negotiable constraint</li>
+              </ul>
+            </div>
+            <div>
+              <h4>🌱 Long-Term Perspective</h4>
+              <ul>
+                <li>Sustainable reduction takes years, not months</li>
+                <li>Prevention and recovery investments pay off over time</li>
+                <li>Build capacity and systems, not just interventions</li>
+                <li>Measure generational outcomes, not just immediate stats</li>
+              </ul>
+            </div>
+          </div>
+
+          <h3>The Virtuous Cycle</h3>
+          <p>When all layers work together, they create reinforcing positive effects:</p>
           
-          <div class="form-group">
-            <label class="form-label">Reward (XP)</label>
-            <input type="number" class="form-input" data-field="xp"
-                   placeholder="15" min="0" value="${choice.xp}">
+          <div class="highlight">
+            <strong>Upstream controls</strong> make production harder and more expensive →
+            <strong>Midstream disruption</strong> breaks supply chains and increases risk →
+            <strong>Retail scarcity</strong> drives up prices and reduces availability →
+            <strong>Treatment access</strong> offers exit pathways for users →
+            <strong>Prevention & social investment</strong> reduces new users entering market →
+            <strong>Community resilience</strong> reduces vulnerability and need →
+            <strong>Market shrinks</strong> and becomes less profitable and organized →
+            <strong>Violence and harm decrease</strong> as markets destabilize →
+            <strong>Resources freed up</strong> for more community investment →
+            <strong>Cycle continues...</strong>
           </div>
+
+          <h3>Regional Adaptation Examples</h3>
+          <p class="muted">Different contexts require different emphasis:</p>
+          
+          <div class="three-col-list">
+            <div>
+              <h4>Production Zones</h4>
+              <p class="muted">Areas with significant local production</p>
+              <ul>
+                <li>Heavy focus on precursor controls</li>
+                <li>Environmental enforcement</li>
+                <li>Professional network engagement</li>
+                <li>Alternative economic development</li>
+              </ul>
+            </div>
+            <div>
+              <h4>Transit Corridors</h4>
+              <p class="muted">Regions used for smuggling and transport</p>
+              <ul>
+                <li>Border cooperation and intelligence</li>
+                <li>Freight industry partnerships</li>
+                <li>Anti-corruption focus</li>
+                <li>Regional coordination mechanisms</li>
+              </ul>
+            </div>
+            <div>
+              <h4>Consumer Markets</h4>
+              <p class="muted">Urban areas with high use prevalence</p>
+              <ul>
+                <li>Treatment and recovery infrastructure</li>
+                <li>Harm reduction services</li>
+                <li>Community policing approaches</li>
+                <li>Economic opportunity creation</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="warning">
+            <strong>⚠️ Final Caution:</strong> This atlas provides a comprehensive framework, but implementation requires local expertise, community partnership, ethical governance, and unwavering commitment to human dignity. Use this knowledge wisely, adaptively, and always in service of reducing harm and expanding human flourishing.
+          </div>
+        </article>
+
+      </section>
+
+      <!-- SIDEBAR / TABLE OF CONTENTS -->
+      <aside class="toc" aria-label="Table of contents">
+        <div class="toc-title">📑 Atlas Navigation</div>
+        <ul>
+          <li><a href="#overview">🎯 Purpose & Principles</a></li>
+          <li>
+            <a href="#supply-chain">⛓️ Layer 1: Supply Chain</a>
+            <ul class="toc-sub">
+              <li><a href="#supply-chain">Precursor Controls</a></li>
+              <li><a href="#supply-chain">Production Disruption</a></li>
+              <li><a href="#supply-chain">Forensics & Intelligence</a></li>
+            </ul>
+          </li>
+          <li>
+            <a href="#distribution">🕸️ Layer 2: Distribution</a>
+            <ul class="toc-sub">
+              <li><a href="#distribution">Transport Chokepoints</a></li>
+              <li><a href="#distribution">Wholesale Networks</a></li>
+              <li><a href="#distribution">Street-Level Dynamics</a></li>
+            </ul>
+          </li>
+          <li>
+            <a href="#demand">💊 Layer 3: Demand & Recovery</a>
+            <ul class="toc-sub">
+              <li><a href="#demand">Prevention & Resilience</a></li>
+              <li><a href="#demand">Treatment Infrastructure</a></li>
+              <li><a href="#demand">Recovery Systems</a></li>
+              <li><a href="#demand">Harm Reduction</a></li>
+            </ul>
+          </li>
+          <li>
+            <a href="#international">🌐 Layer 4: International</a>
+            <ul class="toc-sub">
+              <li><a href="#international">UN Frameworks</a></li>
+              <li><a href="#international">Regional Cooperation</a></li>
+              <li><a href="#international">Anti-Corruption</a></li>
+            </ul>
+          </li>
+          <li>
+            <a href="#technology">📊 Layer 5: Technology</a>
+            <ul class="toc-sub">
+              <li><a href="#technology">Data Integration</a></li>
+              <li><a href="#technology">Emerging Tech</a></li>
+              <li><a href="#technology">Privacy Safeguards</a></li>
+            </ul>
+          </li>
+          <li>
+            <a href="#implementation">⚙️ Layer 6: Implementation</a>
+            <ul class="toc-sub">
+              <li><a href="#implementation">Context Assessment</a></li>
+              <li><a href="#implementation">Resource Allocation</a></li>
+              <li><a href="#implementation">Adaptive Management</a></li>
+            </ul>
+          </li>
+          <li>
+            <a href="#measurement">📈 Layer 7: Measurement</a>
+            <ul class="toc-sub">
+              <li><a href="#measurement">Success Metrics</a></li>
+              <li><a href="#measurement">Accountability</a></li>
+            </ul>
+          </li>
+        </ul>
+
+        <h4 style="margin-top: 20px; color: #d1d5db;">⚡ Key Strategy Domains</h4>
+        <div class="badge-row">
+          <span class="badge badge-green">Precursor Control</span>
+          <span class="badge badge-blue">Border Security</span>
+          <span class="badge badge-amber">Financial Disruption</span>
+          <span class="badge badge-green">Treatment Access</span>
+          <span class="badge">Community Policing</span>
+          <span class="badge badge-blue">Harm Reduction</span>
+          <span class="badge">Youth Prevention</span>
+          <span class="badge badge-amber">International Cooperation</span>
+          <span class="badge">Data Analytics</span>
+          <span class="badge badge-green">Recovery Support</span>
         </div>
-      `;
-      
-      container.appendChild(choiceDiv);
-    });
-  }
-}
 
-// ═══════════════════════════════════════════════════════════════════════
-// STORY MAP VISUALIZATION
-// ═══════════════════════════════════════════════════════════════════════
+        <h4 style="margin-top: 16px;">📚 Document Usage</h4>
+        <p class="muted" style="font-size: 12px; line-height: 1.5;">
+          This atlas is intentionally high-level and conceptual. Treat it as a strategic framework to be adapted into context-specific policies and programs—not as an operational manual. All interventions must respect human rights, involve affected communities, and be grounded in evidence.
+        </p>
 
-function renderStoryMap() {
-  const container = document.getElementById('story-map');
-  
-  let html = '';
-  
-  // Starting chapter
-  html += `
-    <div class="map-node">
-      <h4>📖 ${storyData.chapters.start.title || 'Opening Chapter'}</h4>
-      <p style="color: var(--text-muted); font-size: 0.9rem;">
-        ${storyData.chapters.start.text.substring(0, 150)}...
-      </p>
-      <div class="map-connections">
-        ${storyData.chapters.start.choices.map(c => `
-          <div class="connection-badge">
-            ${c.icon} ${c.label}
-          </div>
-        `).join('')}
-      </div>
+        <div class="chip-row" style="margin-top: 12px;">
+          <span class="chip">Policy Design</span>
+          <span class="chip">Public Health</span>
+          <span class="chip">Community Action</span>
+          <span class="chip">Evidence-Based</span>
+          <span class="chip">Human Rights</span>
+          <span class="chip">Systems Thinking</span>
+        </div>
+      </aside>
     </div>
-  `;
-  
-  // Show structure
-  if (storyData.chapters.start.choices.length > 0) {
-    html += `
-      <div style="padding: 20px; text-align: center; color: var(--text-muted);">
-        <p style="font-size: 1.1rem; margin-bottom: 15px;">
-          ↓ Your story branches into ${storyData.chapters.start.choices.length} paths
-        </p>
-        <p style="font-size: 0.9rem;">
-          💡 In Step 4, you'll create follow-up chapters for each choice
-        </p>
+  </main>
+
+  <footer>
+    <div style="max-width: 900px; margin: 0 auto;">
+      <p>
+        <strong>Educational Purpose Statement:</strong> This comprehensive atlas outlines lawful, evidence-based strategies for reducing amphetamine and methamphetamine production, distribution, and demand. It is designed exclusively for public-interest use by policymakers, health professionals, researchers, and community leaders. This document does not endorse, describe, or facilitate any illegal activities.
+      </p>
+      
+      <div class="zero-harm-notice">
+        <strong>🛡️ Zero Harm & Anti-Coercion Commitment</strong><br />
+        This work is grounded in principles of human dignity, harm reduction, and non-coercion. All strategies must respect human rights, avoid discrimination, and prioritize the wellbeing of individuals and communities over punitive approaches. No information in this document should be used for surveillance, repression, or targeting of vulnerable populations. Privacy protections and community consent are non-negotiable requirements for any implementation.
       </div>
-    `;
-  }
-  
-  container.innerHTML = html;
-}
+      
+      <div class="footer-pill">
+        Core Philosophy: <strong>Less harm · Reduced demand · Shrinking markets · Expanded dignity · Flourishing communities</strong>
+      </div>
+      
+      <p class="muted" style="margin-top: 16px; font-size: 11px;">
+        No tracking, no analytics, no hidden telemetry. This page operates entirely locally in your browser. All expandable sections use pure JavaScript with no external dependencies or data collection.
+      </p>
+    </div>
+  </footer>
 
-// ═══════════════════════════════════════════════════════════════════════
-// LIVE PREVIEW
-// ═══════════════════════════════════════════════════════════════════════
-
-function renderPreview() {
-  const container = document.getElementById('preview-panel');
-  
-  const title = storyData.chapters.start.title || 'Your Story Title';
-  const text = storyData.chapters.start.text || 'Your opening text will appear here...';
-  
-  let html = `
-    <h2 class="preview-title">${title}</h2>
-    <div class="preview-text">${text.split('\n\n').map(p => `<p>${p}</p>`).join('')}</div>
-  `;
-  
-  if (storyData.chapters.start.choices.length > 0) {
-    storyData.chapters.start.choices.forEach(choice => {
-      html += `
-        <div class="preview-choice">
-          <div style="font-size: 2rem; margin-bottom: 10px; text-align: center;">
-            ${choice.icon}
-          </div>
-          <div style="font-size: 1.3rem; font-weight: bold; margin-bottom: 10px; text-align: center; color: var(--primary);">
-            ${choice.label}
-          </div>
-          <p style="text-align: center; margin-bottom: 15px;">
-            ${choice.description}
-          </p>
-          <div style="display: flex; justify-content: center; gap: 20px; font-size: 0.9rem; color: var(--ink); opacity: 0.7;">
-            ${choice.cost > 0 ? `<span>💎 ${choice.cost} Shards</span>` : ''}
-            <span>✨ ${choice.xp} XP</span>
-          </div>
-        </div>
-      `;
+  <script>
+    // ============================================================================
+    // PARTICLE ANIMATION SYSTEM
+    // Creates ambient floating particles with realistic physics and lighting
+    // ============================================================================
+    
+    const canvas = document.getElementById('particles-canvas');
+    const ctx = canvas.getContext('2d');
+    
+    let particles = [];
+    const particleCount = 80;
+    
+    // Set canvas to full viewport size
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+    
+    // Particle class with physics properties
+    class Particle {
+      constructor() {
+        this.reset();
+      }
+      
+      reset() {
+        this.x = Math.random() * canvas.width;
+        this.y = Math.random() * canvas.height;
+        this.size = Math.random() * 2.5 + 0.5;
+        this.speedX = (Math.random() - 0.5) * 0.5;
+        this.speedY = (Math.random() - 0.5) * 0.5;
+        this.opacity = Math.random() * 0.5 + 0.2;
+        this.hue = Math.random() * 60 + 120; // Green-blue range
+      }
+      
+      update() {
+        this.x += this.speedX;
+        this.y += this.speedY;
+        
+        // Wrap around edges
+        if (this.x < 0) this.x = canvas.width;
+        if (this.x > canvas.width) this.x = 0;
+        if (this.y < 0) this.y = canvas.height;
+        if (this.y > canvas.height) this.y = 0;
+        
+        // Subtle pulsing
+        this.opacity += (Math.random() - 0.5) * 0.02;
+        this.opacity = Math.max(0.1, Math.min(0.7, this.opacity));
+      }
+      
+      draw() {
+        ctx.beginPath();
+        const gradient = ctx.createRadialGradient(
+          this.x, this.y, 0,
+          this.x, this.y, this.size * 3
+        );
+        gradient.addColorStop(0, `hsla(${this.hue}, 70%, 60%, ${this.opacity})`);
+        gradient.addColorStop(1, `hsla(${this.hue}, 70%, 60%, 0)`);
+        
+        ctx.fillStyle = gradient;
+        ctx.arc(this.x, this.y, this.size * 3, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+    
+    // Initialize particles
+    for (let i = 0; i < particleCount; i++) {
+      particles.push(new Particle());
+    }
+    
+    // Draw connection lines between nearby particles
+    function connectParticles() {
+      for (let i = 0; i < particles.length; i++) {
+        for (let j = i + 1; j < particles.length; j++) {
+          const dx = particles[i].x - particles[j].x;
+          const dy = particles[i].y - particles[j].y;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+          
+          if (distance < 120) {
+            ctx.beginPath();
+            ctx.strokeStyle = `rgba(34, 197, 94, ${0.15 * (1 - distance / 120)})`;
+            ctx.lineWidth = 0.5;
+            ctx.moveTo(particles[i].x, particles[i].y);
+            ctx.lineTo(particles[j].x, particles[j].y);
+            ctx.stroke();
+          }
+        }
+      }
+    }
+    
+    // Animation loop
+    function animate() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      connectParticles();
+      
+      particles.forEach(particle => {
+        particle.update();
+        particle.draw();
+      });
+      
+      requestAnimationFrame(animate);
+    }
+    
+    animate();
+    
+    // ============================================================================
+    // EXPANDABLE SECTIONS
+    // Toggle expand/collapse for content sections
+    // ============================================================================
+    
+    function toggleExpand(headerElement) {
+      const expandable = headerElement.parentElement;
+      expandable.classList.toggle('active');
+    }
+    
+    // ============================================================================
+    // SMOOTH SCROLL FOR ANCHOR LINKS
+    // Enhance navigation with smooth scrolling
+    // ============================================================================
+    
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+          target.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+          });
+        }
+      });
     });
-  }
-  
-  container.innerHTML = html;
-}
-
-// ═══════════════════════════════════════════════════════════════════════
-// CODE GENERATION
-// ═══════════════════════════════════════════════════════════════════════
-
-function generateCode() {
-  const container = document.getElementById('generated-code');
-  
-  saveStepData();
-  
-  const code = `// Add this to your ZeroStorm chapters object (JavaScript SECTION 3)
-
-start: {
-  title: '${storyData.chapters.start.title || 'The Opening'}',
-  
-  text: \`${storyData.chapters.start.text || 'Your story begins...'}\`,
-  
-  choices: [
-${storyData.chapters.start.choices.map(choice => `    {
-      id: '${choice.id}',
-      icon: '${choice.icon}',
-      label: '${choice.label}',
-      description: '${choice.description}',
-      cost: { shards: ${choice.cost} },
-      rewards: { xp: ${choice.xp} },
-      requirements: {}
-    }`).join(',\n')}
-  ]
-}
-
-// Next: Create follow-up chapters for each choice ID:
-${storyData.chapters.start.choices.map(choice => `// - ${choice.id}: Where "${choice.label}" leads`).join('\n')}`;
-  
-  // Syntax highlighting
-  container.innerHTML = syntaxHighlight(code);
-}
-
-function syntaxHighlight(code) {
-  return code
-    .replace(/\/\/(.*)/g, '<span class="code-comment">//$1</span>')
-    .replace(/(['"`])(.*?)\1/g, '<span class="code-string">$1$2$1</span>')
-    .replace(/\b(\d+)\b/g, '<span class="code-number">$1</span>')
-    .replace(/\b(const|let|var|function|return|if|else)\b/g, '<span class="code-keyword">$1</span>')
-    .replace(/(\w+):/g, '<span class="code-property">$1</span>:');
-}
-
-function copyCode() {
-  const code = document.getElementById('generated-code').textContent;
-  navigator.clipboard.writeText(code);
-  
-  const btn = document.querySelector('.copy-code-btn');
-  btn.textContent = '✅ Copied!';
-  setTimeout(() => {
-    btn.textContent = '📋 Copy All';
-  }, 2000);
-}
-
-// ═══════════════════════════════════════════════════════════════════════
-// UTILITY FUNCTIONS
-// ═══════════════════════════════════════════════════════════════════════
-
-function copyPrompt(promptId) {
-  let prompt = '';
-  
-  const genre = storyData.brainstorm.genre || 'story';
-  const conflict = storyData.brainstorm.conflict || 'a conflict';
-  const world = storyData.brainstorm.world || 'this world';
-  
-  switch(promptId) {
-    case 'opening1':
-      prompt = `Write an opening paragraph for a ${genre} that begins with ${conflict}`;
-      break;
-    case 'opening2':
-      prompt = `Describe the setting of ${world} through sensory details`;
-      break;
-    case 'opening3':
-      prompt = "Write a mysterious opening that makes readers ask 'what happens next?'";
-      break;
-  }
-  
-  navigator.clipboard.writeText(prompt);
-  alert('📋 Copied to clipboard! Paste into ChatGPT.');
-}
-
-function saveProgress() {
-  saveStepData();
-  alert('💾 Progress saved! You can close this page and return later.');
-}
-
-function exportStory() {
-  saveStepData();
-  
-  const dataStr = JSON.stringify(storyData, null, 2);
-  const dataBlob = new Blob([dataStr], { type: 'application/json' });
-  const url = URL.createObjectURL(dataBlob);
-  
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = `zerostorm-story-${Date.now()}.json`;
-  link.click();
-  
-  URL.revokeObjectURL(url);
-}
-
-function downloadStory() {
-  generateCode();
-  const code = document.getElementById('generated-code').textContent;
-  
-  const blob = new Blob([code], { type: 'text/plain' });
-  const url = URL.createObjectURL(blob);
-  
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = `zerostorm-chapters-${Date.now()}.js`;
-  link.click();
-  
-  URL.revokeObjectURL(url);
-}
-
-// ═══════════════════════════════════════════════════════════════════════
-// INITIALIZATION
-// ═══════════════════════════════════════════════════════════════════════
-
-document.addEventListener('DOMContentLoaded', () => {
-  // Load saved data if exists
-  loadStepData();
-  
-  // Initialize step 3 choices if empty
-  if (currentStep === 3 && document.getElementById('choices-container').children.length === 0) {
-    initializeChoices();
-  }
-  
-  console.log('🌟 ZeroStorm Story Architect initialized');
-});
-</script>
-
+    
+    // ============================================================================
+    // INTERSECTION OBSERVER FOR SCROLL ANIMATIONS
+    // Add subtle entrance animations as cards come into view
+    // ============================================================================
+    
+    const observerOptions = {
+      threshold: 0.1,
+      rootMargin: '0px 0px -50px 0px'
+    };
+    
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.style.opacity = '1';
+          entry.target.style.transform = 'translateY(0)';
+        }
+      });
+    }, observerOptions);
+    
+    // Observe all cards
+    document.querySelectorAll('.card').forEach(card => {
+      card.style.opacity = '0';
+      card.style.transform = 'translateY(20px)';
+      card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+      observer.observe(card);
+    });
+    
+    console.log('🌟 Comprehensive Amphetamine Supply Disruption Atlas loaded');
+    console.log('📊 7 integrated layers • Evidence-based strategies • Human-centered approach');
+    console.log('🛡️ Zero harm • No tracking • Privacy-first • Community-focused');
+  </script>
 </body>
 </html>
